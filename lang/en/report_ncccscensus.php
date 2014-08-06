@@ -21,8 +21,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Temp comment: todo: alphabetize completely.
-// Temp comment: strings below definitely required.
 $string['action'] = 'Action';
 $string['activity'] = 'Activity';
 $string['activityname'] = 'Name';
@@ -64,8 +62,7 @@ $string['legendnograde'] = 'Attempt not completed or graded';
 $string['logo'] = 'Logo';
 $string['logoimgname'] = 'Currently selected logo image';
 $string['na'] = 'N/A';
-$string['ncccscensus:accessallreports'] = 'Can access NCCCS Census report for all courses.';
-$string['ncccscensus:accesscoursereport'] = 'Can access NCCCS Census report for this course.';
+$string['ncccscensus:view'] = 'Can access the NCCCS Census report.';
 $string['ncccscensusreport_title'] = 'NCCCS Census Report';
 $string['noactivitycompleted'] = 'No activity completed';
 $string['nocourses'] = 'There are no courses available to report on.';
@@ -117,4 +114,4 @@ $string['unsupportedfiletype'] = 'The filetype is not supported.';
 $string['uploaderror'] = 'File upload failed';
 $string['uploadimage'] = 'Upload images';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload a logo or header image.';
-$string['viewreport'] = 'View';
+$string['viewreport'] = 'HTML';
