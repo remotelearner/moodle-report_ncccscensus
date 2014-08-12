@@ -49,17 +49,17 @@ if ($mform->is_cancelled()) {
     die();
 }
 
-$action = optional_param('action', $mform::ACTION_VIEW, PARAM_INT);
+$action = optional_param('action', ACTION_VIEW, PARAM_INT);
 
-if ($action == $mform::ACTION_VIEW) {
+if ($action == ACTION_VIEW) {
     echo $OUTPUT->header();
     echo $OUTPUT->box_start();
 }
 
-if ($mform->get_data()) {
+if ($formdata = $mform->get_data()) {
 
-    if (ncccscensus_generate_report($mform, $action) === false) {
-        if ($action !== $mform::ACTION_VIEW) {
+    if (ncccscensus_generate_report($formdata, $action) === false) {
+        if ($action !== ACTION_VIEW) {
             echo $OUTPUT->header();
             echo $OUTPUT->box_start();
             $mform->display();
@@ -67,7 +67,7 @@ if ($mform->get_data()) {
 
         echo $OUTPUT->notification(get_string('nodatafound', 'report_ncccscensus'), 'notifysuccess');
 
-        if ($action !== $mform::ACTION_VIEW) {
+        if ($action !== ACTION_VIEW) {
             echo $OUTPUT->box_end();
             echo $OUTPUT->footer();
         }
@@ -77,7 +77,7 @@ if ($mform->get_data()) {
     $mform->display();
 }
 
-if ($action == $mform::ACTION_VIEW) {
+if ($action == ACTION_VIEW) {
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }
