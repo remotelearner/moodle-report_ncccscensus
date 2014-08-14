@@ -249,13 +249,13 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
     }
 
     if ($type == ACTION_VIEW) {
-        $headers = array('student' => get_string('studentfullname', $reportname));
+        $headers = array('student' => get_string('studentfullnamehtml', $reportname));
         $showstudentid = ncccscensus_check_field_status('showstudentid', 'html');
     } else if ($type == ACTION_CSV) {
         $headers = array('student' => get_string('studentfullnamecsv', $reportname));
         $showstudentid = ncccscensus_check_field_status('showstudentid', 'csv');
     } else {
-        $headers = array('student' => get_string('student', $reportname));
+        $headers = array('student' => get_string('studentfullnamepdf', $reportname));
         $showstudentid = ncccscensus_check_field_status('showstudentid', 'pdf');
     }
 
@@ -415,54 +415,80 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
 
     } else if ($type == ACTION_PDF) {
 
+        $topheaders = array();
+        $topheaders['student']    = get_string('student', $reportname);
+        $topheaders['activity']   = get_string('activity', $reportname);
+        $topheaders['submission'] = get_string('submission', $reportname);
+        $topheaders['grade']      = get_string('grade', $reportname);
+
+        $bottomheaders = array();
+        $bottomheaders['student'] = array('fullname' => get_string('studentfullnamepdf', $reportname));
+        $showstudentid = ncccscensus_check_field_status('showstudentid', 'pdf');
+        if ($showstudentid) {
+            $bottomheaders['student']['id'] = get_string('studentidpdf', $reportname);
+        }
+        $bottomheaders['activity']   = array('name'   => get_string('activityname', $reportname),
+                                             'module' => get_string('activitymodule', $reportname));
+        $bottomheaders['submission'] = array('status' => get_string('submissionstatus', $reportname),
+                                             'date'   => get_string('submissiondate', $reportname));
+        $bottomheaders['grade']      = array('grade'  => get_string('grade', $reportname),
+                                             'date'   => get_string('gradedatepdf', $reportname));
+
         require_once('report.class.php');
-        $censusreport = new report($cid);
-        $censusreport->type = 'classroster';
-        $censusreport->fileformats = array(
-            'pdf'   => get_string('pdf', $reportname)
-        );
-        $censusreport->headers = $headers;
+        $censusreport = new report();
+        $censusreport->topheaders = $topheaders;
+        $censusreport->bottomheaders = $bottomheaders;
         $censusreport->data = array();
 
         foreach ($results as $result) {
-            $pdatm = new Object();
-            $pdatm->student   = $result->student;
+            $fieldarray = array();
+            $fieldarray['studentfullname'] = $result->student;
             if ($showstudentid) {
-                $pdatm->studentid = $result->studentid;
+                $fieldarray['studentid'] = $result->studentid;
             }
-            $pdatm->activity = $result->activity;
-            $pdatm->module = $result->module;
-            $pdatm->status = $result->status;
-            $pdatm->submitdate = $result->submitdate;
-            $pdatm->grade = $result->grade;
-            $pdatm->date = $result->date;
-            $censusreport->data[] = $pdatm;
+            $fieldarray['activityname'] = $result->activity;
+            $fieldarray['activitymodule'] = $result->module;
+            $fieldarray['submissionstatus'] = $result->status;
+            $fieldarray['submissiondate'] = $result->submitdate;
+            $fieldarray['gradegrade'] = $result->grade;
+            $fieldarray['gradedate'] = $result->date;
+            $censusreport->data[] = array('data' => $fieldarray, 'override' => ($result->overridden != 0) ? true : false,
+                    'nograde' => ($result->grade == get_string('nograde', $reportname) ? true : false));
         }
 
-        $censusreport->filename = 'ncccscensusreport';
-        $censusreport->title = get_string('ncccscensusreport_title', $reportname);
+        // Create helpful PDF file name.
+        $modgroupname = '';
+        if (ncccscensus_check_field_status('showallstudents')) {
+            $modgroupname .= '_All';
+        }
+        $modgroupname .= isset($groupname) ? ('_'.preg_replace('/[^A-Za-z0-9]/', '', $groupname)) : '';
+        $censusreport->filename = 'CensusReport2_'.$course->shortname.$modgroupname.'.pdf';
 
         if (ncccscensus_check_field_status('showcoursename', 'pdf')) {
-            $censusreport->top = get_string('coursetitle', $reportname).': '.$course->fullname."\n";
+            $censusreport->top[] = array(get_string('coursetitlepdf', $reportname).':', $course->fullname);
         }
 
         if (ncccscensus_check_field_status('showcoursecode', 'pdf')) {
-            $censusreport->top .= get_string('coursecode', $reportname).': '.$course->shortname."\n";
+            $censusreport->top[] = array(get_string('coursecodepdf', $reportname).':', $course->shortname);
         }
 
         if (ncccscensus_check_field_status('showcourseid', 'pdf') && $course->idnumber !== '') {
-            $censusreport->top .= get_string('courseid', $reportname).': '.$course->idnumber."\n";
-        }
-
-        if (isset($groupname)) {
-            $censusreport->top .= get_string('section', $reportname).': '.$groupname."\n";
+            $censusreport->top[] = array(get_string('courseid', $reportname).':', $course->idnumber);
         }
 
         if (ncccscensus_check_field_status('showteachername', 'pdf')) {
             if (!empty($namesarrayview)) {
                 $instructors = implode(', ', $namesarrayview);
             }
-            $censusreport->top .= get_string('instructor', $reportname).': '.strip_tags($instructors);
+            $censusreport->top[] = array(get_string('instructor', $reportname).':', strip_tags($instructors));
+        }
+
+        $censusreport->top[] = array(get_string('reportrangepdf', $reportname).':', $reportrange);
+
+        if (isset($groupname)) {
+            $censusreport->top[] = array(get_string('group', $reportname).':', $groupname);
+        } else if ($group !== false) {
+            $censusreport->top[] = array(get_string('group', $reportname).':', get_string('allgroupspdf', $reportname));
         }
 
         if (ncccscensus_check_field_status('showsignatureline', 'pdf')) {
@@ -474,11 +500,9 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
         }
 
         if ($footermessage = get_config('report_ncccscensus', 'footermessage')) {
-            $censusreport->bottom .= '\n'.$footermessage.'\n';
+            $censusreport->bottom .= $footermessage;
         }
-        $censusreport->titlealign = 'L';
-        $censusreport->fontsize = 14;
-        $censusreport->download('pdf');
+        $censusreport->download();
 
     } else if ($type == ACTION_CSV) {
         $filename = 'ncccscensusreport.csv';
@@ -667,6 +691,12 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
     $results = array();
     $gis     = array();
 
+    if (empty($users)) {
+        $users = 'null';
+    } else {
+        $users = implode(',', $users);
+    }
+
     // Pass #1 - Get any graded forum post records from the DB.
     $sql = 'SELECT u.id AS userid, fp.id AS postid, gi.id AS giid, u.firstname, u.lastname, u.idnumber, gg.overridden,
                    fp.message, gi.itemname, gg.finalgrade, fp.created AS timesubmitted, fp.modified AS timecreated,
@@ -676,7 +706,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {forum} f ON f.id = fd.forum
         INNER JOIN {grade_items} gi ON gi.iteminstance = fd.forum
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = fp.userid
-        INNER JOIN {user} u ON u.id = fp.userid AND fp.userid in ('.implode(',', $users).')
+        INNER JOIN {user} u ON u.id = fp.userid AND fp.userid in ('.$users.')
              WHERE fd.course = :courseid
                    AND f.assessed > 0
                    AND fp.userid != 0
@@ -695,6 +725,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
 
     $rs = $DB->get_recordset_sql($sql, $dbparams);
 
+    $datestring = 'n/j/y';
     foreach ($rs as $record) {
         if (empty($gis[$record->giid])) {
             $gis[$record->giid] = new grade_item(array('id' => $record->giid));
@@ -704,10 +735,10 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         if (empty($results[$record->userid]) || ($record->timecreated < $results[$record->userid]->timecreated)) {
             if (empty($record->finalgrade)) {
                 $grade = get_string('nograde', $reportname);
-                $date  = get_string('na', $reportname);
+                $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = strftime('%m/%d/%y', $record->timecreated);
+                $date  = date($datestring, $record->timecreated);
             }
 
             $result = new stdClass;
@@ -719,7 +750,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleforum', $reportname);
             $result->status      = get_string('submissionstatusna', $reportname); // No status info required for 'forum'.
-            $result->submitdate  = strftime('%m/%d/%y', $record->timesubmitted);
+            $result->submitdate  = date($datestring, $record->timesubmitted);
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -738,7 +769,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {glossary} glos ON ent.glossaryid = glos.id
         INNER JOIN {grade_items} gi ON gi.iteminstance = glos.id
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = ent.userid
-        INNER JOIN {user} u ON u.id = ent.userid AND ent.userid in ('.implode(',', $users).')
+        INNER JOIN {user} u ON u.id = ent.userid AND ent.userid in ('.$users.')
              WHERE glos.course = :courseid
                    AND glos.assessed > 0
                    AND ent.userid != 0
@@ -763,10 +794,10 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         if (empty($results[$record->userid]) || ($record->timecreated < $results[$record->userid]->timecreated)) {
             if (empty($record->finalgrade)) {
                 $grade = get_string('nograde', $reportname);
-                $date = get_string('na', $reportname);
+                $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = strftime('%m/%d/%y', $record->timecreated);
+                $date  = date($datestring, $record->timecreated);
             }
 
             $result = new stdClass;
@@ -778,7 +809,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleglossary', $reportname);
             $result->status      = get_string('submissionstatusna', $reportname); // No status info required for 'glossary'.
-            $result->submitdate  = strftime('%m/%d/%y', $record->timesubmitted);
+            $result->submitdate  = date($datestring, $record->timesubmitted);
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -798,7 +829,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {grade_items} gi ON gi.iteminstance = a.id
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = s.userid
          LEFT JOIN {assign_grades} ag ON ag.assignment = a.id
-        INNER JOIN {user} u ON u.id = s.userid AND s.userid in ('.implode(',', $users).')
+        INNER JOIN {user} u ON u.id = s.userid AND s.userid in ('.$users.')
              WHERE a.course = :courseid
                    AND s.userid != 0
                    AND gi.itemmodule = "assign"
@@ -822,10 +853,10 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         if (empty($results[$record->userid]) || ($record->timecreated < $results[$record->userid]->timecreated)) {
             if (empty($record->finalgrade)) {
                 $grade = get_string('nograde', $reportname);
-                $date  = get_string('na', $reportname);
+                $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = strftime('%m/%d/%y', $record->timegraded);
+                $date  = date($datestring, $record->timegraded);
             }
 
             $result = new stdClass;
@@ -837,7 +868,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleassignment', $reportname);
             $result->status      = get_string('submissionstatus'.$record->status, $reportname);
-            $result->submitdate  = strftime('%m/%d/%y', $record->timesubmitted);
+            $result->submitdate  = date($datestring, $record->timesubmitted);
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -857,7 +888,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {grade_items} gi ON gi.iteminstance = qu.id
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = q.userid
          LEFT JOIN {quiz_grades} qg ON qg.quiz = qu.id
-        INNER JOIN {user} u ON u.id = q.userid AND q.userid in ('.implode(',', $users).')
+        INNER JOIN {user} u ON u.id = q.userid AND q.userid in ('.$users.')
              WHERE qu.course = :courseid
                    AND q.userid != 0
                    AND gi.itemmodule = "quiz"
@@ -881,10 +912,10 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         if (empty($results[$record->userid]) || ($record->timecreated < $results[$record->userid]->timecreated)) {
             if (empty($record->finalgrade)) {
                 $grade = get_string('nograde', $reportname);
-                $date  = get_string('na', $reportname);
+                $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = strftime('%m/%d/%y', $record->timegraded);
+                $date  = date($datestring, $record->timegraded);
             }
 
             $result = new stdClass;
@@ -896,7 +927,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('modulequiz', $reportname);
             $result->status      = get_string('submissionstatus'.$record->state, $reportname);
-            $result->submitdate  = strftime('%m/%d/%y', $record->timesubmitted);
+            $result->submitdate  = date($datestring, $record->timesubmitted);
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -912,7 +943,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         $sql = 'SELECT u.id as userid, u.lastname, u.firstname, u.idnumber, u.firstnamephonetic, u.lastnamephonetic, u.middlename,
                        u.alternatename
                   FROM {user} u
-                 WHERE u.id in ('.implode(',', $users).')';
+                 WHERE u.id in ('.$users.')';
 
         $rs = $DB->get_recordset_sql($sql);
 
@@ -929,8 +960,9 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
                 $result->status      = get_string('submissionstatusna', $reportname);
                 $result->submitdate  = '';
                 $result->grade       = get_string('nograde', $reportname);
+                $result->overridden  = false;
                 $result->timecreated = 0;
-                $result->date        = get_string('na', $reportname);
+                $result->date        = '';
                 $results[$record->userid] = $result;
             }
         }
