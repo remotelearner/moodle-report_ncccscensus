@@ -291,6 +291,7 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
                         $teachers[$teacher->id] = true;
                         $fullname = fullname($teacher, has_capability('moodle/site:viewfullnames', $context));
                         $namesarrayview[] = $rolename.$viewlink.$teacher->id.'&amp;course='.SITEID.'">'.$fullname.'</a>';
+                        $namesarraycsv[]  = $rolename.': '.$fullname;
                         $namesarraypdf[]  = $rolename.': '.$fullname;
                     }
                 }
@@ -375,6 +376,16 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
     $datestring = 'n/j/y';
     $reportrange = date($datestring, $formdata->startdate).' - '.date($datestring, $formdata->enddate);
 
+    if ($type != ACTION_VIEW) {
+        // Create helpful file name.
+        $modgroupname = '';
+        if (ncccscensus_check_field_status('showallstudents')) {
+            $modgroupname .= '_All';
+        }
+        $modgroupname .= isset($groupname) ? ('_'.preg_replace('/[^A-Za-z0-9]/', '', $groupname)) : '';
+        $filename = 'CensusReport2_'.$course->shortname.$modgroupname;
+    }
+
     if ($type == ACTION_VIEW) {
 
         if (ncccscensus_check_field_status('showcoursename', 'html')) {
@@ -456,13 +467,7 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
                     'nograde' => ($result->grade == get_string('nograde', $reportname) ? true : false));
         }
 
-        // Create helpful PDF file name.
-        $modgroupname = '';
-        if (ncccscensus_check_field_status('showallstudents')) {
-            $modgroupname .= '_All';
-        }
-        $modgroupname .= isset($groupname) ? ('_'.preg_replace('/[^A-Za-z0-9]/', '', $groupname)) : '';
-        $censusreport->filename = 'CensusReport2_'.$course->shortname.$modgroupname.'.pdf';
+        $censusreport->filename = $filename.'.pdf';
 
         if (ncccscensus_check_field_status('showcoursename', 'pdf')) {
             $censusreport->top[] = array(get_string('coursetitlepdf', $reportname).':', $course->fullname);
@@ -505,7 +510,6 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
         $censusreport->download();
 
     } else if ($type == ACTION_CSV) {
-        $filename = 'ncccscensusreport.csv';
 
         if (!empty($_SERVER['HTTP_USER_AGENT']) && (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false)) {
             header('Expires: 0');
@@ -517,74 +521,64 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
             header('Pragma: expires');
             header('Expires: Mon, 20 Aug 1969 09:23:00 GMT');
             header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
-            header('Content-Transfer-Encoding: ascii');
-            header('Content-Disposition: attachment; filename='.$filename);
-            header('Content-Type: text/comma-separated-values');
-        } else {
-            header('Content-Transfer-Encoding: ascii');
-            header('Content-Disposition: attachment; filename='.$filename);
-            header('Content-Type: text/comma-separated-values');
         }
+        header('Content-Transfer-Encoding: ascii');
+        header('Content-Disposition: attachment; filename='.$filename.'.csv');
+        header('Content-Type: text/comma-separated-values');
 
-        echo get_string('ncccscensusreport_title', 'report_ncccscensus')."\n";
-        $fields = array(0 => array(), 1 => array());
+        $output = fopen('php://output', 'w');
+
+        fputcsv($output, array(get_string('ncccscensusreport_title', 'report_ncccscensus')));
+        fputcsv($output, array());
 
         if (ncccscensus_check_field_status('showcoursename', 'csv')) {
-            $fields[0][] = get_string('coursetitle', $reportname);
-            $fields[1][] = $course->fullname;
+            fputcsv($output, array(get_string('coursetitle', $reportname), $course->fullname));
         }
 
         if (ncccscensus_check_field_status('showcoursecode', 'csv')) {
-            $fields[0][] = get_string('coursecode', $reportname);
-            $fields[1][] = $course->shortname;
+            fputcsv($output, array(get_string('coursecode', $reportname), $course->shortname));
         }
 
         if (ncccscensus_check_field_status('showcourseid', 'csv') && ($course->idnumber !== '')) {
-            $fields[0][] = get_string('courseid', $reportname);
-            $fields[1][] = $course->idnumber;
+            fputcsv($output, array(get_string('courseid', $reportname), $course->idnumber));
         }
+
+        if (!empty($namesarrayview) && ncccscensus_check_field_status('showteachername', 'csv')) {
+            fputcsv($output, array_merge(array(get_string('instructor', $reportname)), $namesarraycsv));
+        }
+
+        fputcsv($output, array(get_string('reportrange', $reportname), $reportrange));
 
         if (isset($groupname)) {
-            $fields[0][] = get_string('section', $reportname);
-            $fields[1][] = $groupname;
+            fputcsv($output, array(get_string('section', $reportname), $groupname));
+        } else {
+            fputcsv($output, array(get_string('section', $reportname), get_string('allgroups', $reportname)));
         }
 
-        if (ncccscensus_check_field_status('showteachername', 'csv')) {
-            if (!empty($namesarrayview)) {
-                $instructors = implode(', ', $namesarrayview);
-            }
-            $fields[0][] = get_string('instructor', $reportname);
-            $fields[1][] = str_replace(',', ';', $instructors);
-        }
-        if (count($fields[0]) > 0) {
-            echo implode(',', $fields[0])."\n";
-            echo implode(',', $fields[1])."\n";
-        }
+        fputcsv($output, array());
+        fputcsv($output, $table->head);
 
-        echo "\n".implode(',', $table->head)."\n";
         foreach ($table->data as $row) {
-            $trow = array();
-            foreach ($row as $coldata) {
-                $trow[] = ncccscensus_csv_escape_string(strip_tags($coldata));
-            }
-            echo implode(',', $trow)."\n";
+            fputcsv($output, $row);
         }
 
         $showsignatureline = ncccscensus_check_field_status('showsignatureline', 'csv');
-        $showdateline      = ncccscensus_check_field_status('showdateline', 'csv');
+        $showdateline = ncccscensus_check_field_status('showdateline', 'csv');
 
-        if ($showsignatureline && $showdateline) {
-            echo "\n";
+        if ($showsignatureline || $showdateline) {
+            fputcsv($output, array());
+
+            if ($showsignatureline) {
+                fputcsv($output, array(get_string('certified', $reportname)));
+                fputcsv($output, array(get_string('signature', $reportname).get_string('underscores', $reportname)));
+            }
+
+            if ($showdateline) {
+                fputcsv($output, array(get_string('date').get_string('underscores', 'report_ncccscensus')));
+            }
         }
 
-        if ($showsignatureline) {
-            echo get_string('certified', 'report_ncccscensus')."\n";
-            echo get_string('signature', 'report_ncccscensus').":\n";
-        }
-
-        if ($showdateline) {
-            echo get_string('date').":\n";
-        }
+        fclose($output);
     }
 }
 

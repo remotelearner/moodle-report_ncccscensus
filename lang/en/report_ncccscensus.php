@@ -123,6 +123,7 @@ $string['submissionstatusinprogress'] = 'In progress';
 $string['submissionstatusna'] = 'N/A';
 $string['submissionstatusreopened'] = 'Reopened';
 $string['submissionstatussubmitted'] = 'Submitted';
+$string['underscores'] = '________________________';
 $string['unsupportedfiletype'] = 'The filetype is not supported.';
 $string['uploaderror'] = 'File upload failed';
 $string['uploadimage'] = 'Upload images';

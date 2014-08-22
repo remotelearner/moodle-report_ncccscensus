@@ -395,7 +395,7 @@ class report {
             if ($id == 'activityname') {
                 $colwidths[$id] = array('numwidth' => $activitycolwidth, 'htmlwidth' => 'width:'.$activitycolwidth.'in;');
             }
-            $reporthtml .= '<th'.($studentcolspan2?' colspan=2':'').' ';
+            $reporthtml .= '<th'.($studentcolspan2 ? ' colspan=2' : '').' ';
             $reporthtml .= 'style="'.$colwidths[$id]['htmlwidth'];
             if (isset($colborders[$id])) {
                 $reporthtml .= $colborders[$id];
@@ -465,16 +465,16 @@ class report {
             }
 
             $fieldarray = $fielddata['data'];
-            $reporthtml .= '<tr bgcolor="#'.($i%2==0?'dddddd':'ffffff').'">';
+            $reporthtml .= '<tr bgcolor="#'.($i%2==0 ? 'dddddd' : 'ffffff').'">';
             $nogradeflag = false;
             foreach ($fieldarray as $fieldname => $fieldvalue) {
-                $reporthtml .= '<td'.($studentcolspan2?' colspan=2':'').' ';
+                $reporthtml .= '<td'.($studentcolspan2 ? ' colspan=2' : '').' ';
 
                 // Colour status and grade cells if grade overridden or no grade.
                 if (($fieldname == 'gradegrade' || $fieldname == 'gradedate') && $fielddata['override']) {
                     $reporthtml .= 'bgcolor="'.get_config('report_ncccscensus', 'gradeoverridecolour').'" ';
-                } else if (($fieldname == 'submissionstatus' || $fieldname == 'gradegrade'
-                        || $fieldname == 'gradedate') && $fielddata['nograde']) {
+                } else if (($fieldname == 'submissionstatus' || $fieldname == 'gradegrade' || $fieldname == 'gradedate')
+                        && $fielddata['nograde']) {
                     $reporthtml .= 'bgcolor="'.get_config('report_ncccscensus', 'gradenogradecolour').'" ';
                     $nogradeflag = true;
                 }
