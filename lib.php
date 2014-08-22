@@ -679,6 +679,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
     require_once($CFG->dirroot.'/lib/gradelib.php');
     require_once($CFG->dirroot.'/lib/grade/constants.php');
     require_once($CFG->dirroot.'/lib/grade/grade_item.php');
+    require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
     $reportname = 'report_ncccscensus';
     $context = context_course::instance($courseid);
@@ -884,6 +885,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
          LEFT JOIN {quiz_grades} qg ON qg.quiz = qu.id
         INNER JOIN {user} u ON u.id = q.userid AND q.userid in ('.$users.')
              WHERE qu.course = :courseid
+                   AND q.state not in ("'.quiz_attempt::IN_PROGRESS.'", "'.quiz_attempt::ABANDONED.'")
                    AND q.userid != 0
                    AND gi.itemmodule = "quiz"
                    AND q.timemodified >= :timestart
