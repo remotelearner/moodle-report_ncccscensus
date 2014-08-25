@@ -412,6 +412,8 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
 
         if (isset($groupname)) {
             echo '<b>'.get_string('section', $reportname).':</b> '.$groupname.'<br>';
+        } else {
+            echo '<b>'.get_string('section', $reportname).':</b> '.get_string('allgroupspdf', $reportname).'<br>';
         }
 
         echo '<br>';
