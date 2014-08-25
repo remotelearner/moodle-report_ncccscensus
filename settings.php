@@ -130,8 +130,8 @@ if ($ADMIN->fulltree) {
     $name = $reportname.'/'.$element;
     $title = get_string($element, $reportname);
     $description = get_string($element.'desc', $reportname);
-    $default = '';
-    $setting = new admin_setting_configtextarea($name, $title, $description, $default, PARAM_TEXT);
+    $default = get_string('footerpdfdefault', $reportname);
+    $setting = new admin_setting_configtextarea($name, $title, $description, $default, PARAM_CLEANHTML);
     $settings->add($setting);
 
     // Upload image setting.

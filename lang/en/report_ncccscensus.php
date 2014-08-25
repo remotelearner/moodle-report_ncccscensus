@@ -45,6 +45,7 @@ $string['downloadreportcsv'] = 'Download CSV';
 $string['editingteacher'] = 'Editing teacher';
 $string['footermessage'] = 'Enter PDF footer message';
 $string['footermessagedesc'] = 'This will be the default footer message for all PDF versions of this report.';
+$string['footerpdfdefault'] = 'Remote-Learner Community College<br />For more information regarding this report go to <a href="http://www.nccommunitycolleges.edu/something">http://www.nccommunitycolleges.edu/something</a>';
 $string['getreport'] = 'Get report';
 $string['grade'] = 'Grade';
 $string['gradedate'] = 'Date graded';

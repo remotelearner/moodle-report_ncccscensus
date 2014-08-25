@@ -99,7 +99,7 @@ class CR2_PDF extends TCPDF {
         // Create the footer message.
         $this->SetY($this->footermargin + 0.8);
         $this->SetFontSize($this->footerfontsize);
-        $this->MultiCell(0, 0.2, $this->bottom, 0, $this->footerbottomhalign, false, 0);
+        $this->writeHTML($this->bottom, false, false, false, false, $this->footerbottomhalign);
 
         // Create "Page x of y" text.
         $this->SetY($this->footermargin + 0.92);
