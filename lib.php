@@ -377,19 +377,9 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
     $reportrange = date($datestring, $formdata->startdate).' - '.date($datestring, $formdata->enddate);
 
     if ($type != ACTION_VIEW) {
-        $timezoneoffset = get_user_timezone_offset();
-        // Defaulting to the server's timezone.
-        if ($timezoneoffset == 99) {
-            $datetime = new DateTime();
-        } else {
-            $datetime = new DateTime('now', new DateTimeZone('UTC'));
-            if ($timezoneoffset < 0) {
-                $datetime->sub(new DateInterval('PT'.abs($timezoneoffset).'H'));
-            } else if ($timezoneoffset > 0) {
-                $datetime->add(new DateInterval('PT'.$timezoneoffset.'H'));
-            }
-        }
-        $filename = 'CensusRpt2_'.$datetime->format('MdY_Hi');
+        $date = usergetdate(time(), get_user_timezone());
+        $filename  = 'CensusRpt2_';
+        $filename .= date('MdY_Hi', mktime($date['hours'], $date['minutes'], 0, $date['mon'], $date['mday'], $date['year']));
     }
 
     if ($type == ACTION_VIEW) {
