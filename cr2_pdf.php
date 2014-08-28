@@ -107,6 +107,9 @@ class CR2_PDF extends TCPDF {
 
     }
 
+    /**
+     * This function creates the HTML markup of the footer and prints the legend.
+     */
     public function outputfooter($footermargin) {
 
         // Create the footnote.
@@ -132,7 +135,7 @@ class CR2_PDF extends TCPDF {
         $legendhtml .= 'bgcolor="'.get_config('report_ncccscensus', 'gradeoverridecolour').'">';
         $legendhtml .= '</td>';
         $legendhtml .= '<td style="width:'.$rightcellwidth.'in;border-right:'.$this->reportborder.'">';
-        $legendhtml .= 'Graded with override';
+        $legendhtml .= get_string('legendgradeoverride', 'report_ncccscensus');
         $legendhtml .= '</td>';
         $legendhtml .= '</tr>';
         $legendhtml .= '<tr>';
@@ -140,12 +143,11 @@ class CR2_PDF extends TCPDF {
         $legendhtml .= 'bgcolor="'.get_config('report_ncccscensus', 'gradenogradecolour').'">';
         $legendhtml .= '</td>';
         $legendhtml .= '<td style="border-bottom:'.$this->reportborder.';border-right:'.$this->reportborder.'">';
-        $legendhtml .= 'Attempt not completed or graded';
+        $legendhtml .= get_string('legendnograde', 'report_ncccscensus');
         $legendhtml .= '</td>';
         $legendhtml .= '</tr>';
         $legendhtml .= '</table>';
         $this->writeHTML($legendhtml, true, false, true, false, '');
 
     }
-
 }
