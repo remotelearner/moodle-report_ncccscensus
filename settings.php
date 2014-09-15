@@ -25,11 +25,20 @@ if (!defined('MOODLE_INTERNAL')) {
     die();
 }
 
+$reportname = 'report_ncccscensus';
+
+// Add report to Site administration navigation.
+$name = get_string('report_bulk', $reportname);
+$url = new moodle_url('/report/ncccscensus/bulk.php');
+if (get_config('report_ncccscensus', 'showhelpsplash')) {
+    $name = get_string('report_bulk', $reportname);
+    $url = new moodle_url("/report/ncccscensus/start.php");
+}
+$ADMIN->add('reports', new admin_externalpage($reportname, $name, $url));
+
 if ($ADMIN->fulltree) {
 
     require_once($CFG->dirroot.'/report/ncccscensus/adminsetting.class.php');
-
-    $reportname = 'report_ncccscensus';
 
     // Show all students setting.
     $element = 'showallstudents';
@@ -184,4 +193,12 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configcolourpicker($name, $title, $description, $default);
     $settings->add($setting);
 
+    // Show all students setting.
+    $element = 'showhelpsplash';
+    $name = $reportname.'/'.$element;
+    $title = get_string($element, $reportname);
+    $description = get_string($element.'desc', $reportname);
+    $default = '1';
+    $setting = new admin_setting_configcheckbox($name, $title, $description, $default);
+    $settings->add($setting);
 }

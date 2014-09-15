@@ -1,6 +1,4 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -15,21 +13,30 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version info for report_ncccscensus.
+ * Returns list of teachers matching query.
  *
  * @package   report_ncccscensus
- * @author    Sean O'Hagan <sean.ohagan@remote-learner.net>
+ * @author    Remote-Learner.net Inc
  * @copyright 2014 Remote Learner - http://www.remote-learner.net/
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-if (!defined('MOODLE_INTERNAL')) {
-    die();
-}
+require_once('../../config.php');
+require_once('lib.php');
+require_once($CFG->dirroot.'/lib/coursecatlib.php');
 
-$plugin->version  = 2014073101;       // The current block version (Date: YYYYMMDDXX)
-$plugin->requires = 2013111804;       // Requires this Moodle version
-$plugin->component = 'report_ncccscensus'; // Full name of the plugin (used for diagnostics).
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release  = 'TODO';
-$plugin->cron = 5;
+require_login();
+$context = context_system::instance();
+require_capability('report/ncccscensus:view', $context);
+
+$query = required_param('q', PARAM_RAW);
+$callback = required_param('callback', PARAM_RAW);
+$categoryquery = json_decode(required_param('c', PARAM_RAW), true);
+
+$categorysql = "";
+$time = usertime(time(), get_user_timezone());
+
+$results = report_ncccscensus_course_search($query, $categoryquery);
+$json = json_encode($results);
+header('Content-Type: application/javascript');
+echo "$callback($json)";

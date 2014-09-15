@@ -264,7 +264,7 @@ class report {
      *
      * @return an empty string if no data is found
      */
-    public function download() {
+    public function download($saveas = false) {
 
         if (empty($this->data)) {
             return '';
@@ -560,7 +560,11 @@ class report {
             $this->pdf->line($x, $y, $x + $signlinewidth, $y);
         }
 
-        $this->pdf->Output($this->filename, 'I');
+        if (!$saveas) {
+            $this->pdf->Output($this->filename, 'I');
+        } else {
+            $this->pdf->Output($saveas, 'F');
+        }
 
     }
 

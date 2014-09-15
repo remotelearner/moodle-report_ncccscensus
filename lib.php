@@ -141,17 +141,477 @@ class ncccscensus_setup_query_form extends moodleform {
 }
 
 /**
+ * Class to define the bulk report search form
+ *
+ * @see moodleform
+ */
+class ncccscensus_setup_bulk_form extends moodleform {
+    /** @var string Comma seperate list of sections to show categories,courses,teachers */
+    private $actions = null;
+    /**
+     * Constructor to setup form.
+     *
+     * @param $pageurl Page url for form.
+     * @param $actions Actions to show on form.
+     */
+    public function __construct($pageurl, $actions) {
+        $this->actions = $actions;
+        parent::__construct($pageurl);
+    }
+
+    /**
+     * Method that defines all of the elements of the form.
+     *
+     */
+    public function definition() {
+        $mform =& $this->_form;
+        $mform->addElement('header', 'header', get_string('querytitle', 'report_ncccscensus'));
+        $mform->addElement('hidden', 'categories', '');
+        $mform->setType('categories', PARAM_RAW);
+        $mform->addElement('hidden', 'courses', '');
+        $mform->setType('courses', PARAM_RAW);
+        $mform->addElement('hidden', 'teachers', '');
+        $mform->setType('teachers', PARAM_RAW);
+
+        $actions = preg_split('/,/', $this->actions);
+        if (empty($actions[0])) {
+            $actions = array('categories', 'courses', 'teachers');
+        }
+        foreach ($actions as $action) {
+            switch ($action) {
+                case "categories":
+                    $mform->addElement('text', 'categoryids', 'Categories', array('size' => '40'));
+                    $mform->setType('categoryids', PARAM_RAW);
+                    $mform->addElement('html', '<div id="categories_list" class="box generalbox" style="display: none"></div>');
+                break;
+                case "courses":
+                    $mform->addElement('text', 'coursesids', 'Courses', array('size' => '40'));
+                    $mform->setType('coursesids', PARAM_RAW);
+                    $mform->addElement('html', '<div id="courses_list" class="box generalbox" style="display: none"></div>');
+                break;
+                case "teachers":
+                    $mform->addElement('text', 'teacherids', 'Teachers', array('size' => '40'));
+                    $mform->setType('teacherids', PARAM_RAW);
+                    $mform->addElement('html', '<div id="teachers_list" class="box generalbox" style="display: none"></div>');
+                break;
+            }
+        }
+        $mform->addElement('date_selector', 'startdate', get_string('from'));
+        $mform->addElement('date_selector', 'enddate', get_string('to'));
+
+        $mform->addElement('html', '<br>');
+
+        $bsubmit =& $mform->createElement('submit', 'submitbutton', get_string('generatereport', 'report_ncccscensus'));
+        $breset  =& $mform->createElement('reset', 'resetbutton', get_string('revert'));
+        $bcancel =& $mform->createElement('cancel');
+
+        $submits = array($bsubmit, $breset, $bcancel);
+        $mform->addGroup($submits, 'submits', '&nbsp;', array(' '), false);
+    }
+}
+
+/**
+ * Cron job to generate the bulk report pdf's and zip.
+ *
+ * @return void
+ * @uses $CFG, $DB
+ */
+function report_ncccscensus_cron() {
+    global $DB;
+    $proccess = $DB->get_records('ncccscensus_batch', array('status' => 0));
+    foreach ($proccess as $batch) {
+        report_ncccscensus_process_batch($batch->id);
+    }
+}
+
+/**
+ * Generates the bulk report pdf's and zip.
+ *
+ * @return void
+ * @uses $CFG, $DB
+ */
+function report_ncccscensus_process_batch($batch) {
+    global $CFG, $DB;
+    require_once($CFG->libdir.'/moodlelib.php');
+    // Retrieve first 200 reports to generate.
+    $proccess = $DB->get_records('ncccscensus_reports', array('batchid' => $batch, 'status' => 0), '', '*', 0, 200);
+    $files = array();
+    $tempdirused = false;
+    $dir = make_temp_directory("ncccscensus$batch", false);
+    foreach ($proccess as $report) {
+        // Create form data.
+        $formdata = new stdClass;
+        $formdata->id = $report->course;
+        $formdata->group = 0;
+        $formdata->startdate = $report->reportstartdate;
+        $formdata->enddate = $report->reportenddate;
+        // Save report pdf.
+        $date = usergetdate(time(), get_user_timezone());
+        $filename = date('MdY_Hi', mktime($date['hours'], $date['minutes'], 0, $date['mon'], $date['mday'], $date['year']));
+        $filename = $filename.'-'.$report->course.'.pdf';
+        // Get temporary file location.
+        $fullfilename = $dir.'/'.$filename;
+        if (true === ncccscensus_generate_report($formdata, ACTION_PDF, $fullfilename)) {
+            $files[$filename] = $fullfilename;
+            $report->filename = $filename;
+            $report->fullfilename = $fullfilename;
+            // Indicate that there was a pdf generated, if not remove as remove in zip will not be called.
+            $tempdirused = true;
+        }
+        $report->status = 1;
+        // Mark report generation as complete.
+        $DB->update_record('ncccscensus_reports', $report);
+    }
+    if (!$tempdirused) {
+        rmdir($dir);
+    }
+    ncccscensus_generate_bulk_zip($batch);
+}
+
+/**
+ * Generates list of zip files in array.
+ *
+ * @param int $batch id of batch
+ * @return array|bool False on no files to add to zip, array on success
+ * @uses $CFG, $DB
+ */
+function ncccscensus_get_zip_files($batch) {
+    global $DB;
+    $files = array();
+    $filerecords = $DB->get_records('ncccscensus_reports', array('batchid' => $batch, 'status' => 1));
+    foreach ($filerecords as $file) {
+        if (!empty($file->filename)) {
+            $files[$file->filename] = $file->fullfilename;
+        }
+    }
+    if (count($files) > 0) {
+        return $files;
+    }
+    return false;
+}
+
+/**
+ * Generates list of zip files in array.
+ *
+ * @param int $batch id of batch
+ * @return array|bool False on no files to add to zip, array on success
+ * @uses $CFG, $DB
+ */
+function ncccscensus_generate_bulk_zip($batch) {
+    global $DB, $USER;
+    // Check if last report.
+    $left = $DB->count_records('ncccscensus_reports', array('batchid' => $batch, 'status' => 0));
+    if ($left !== 0) {
+        return false;
+    }
+    $files = ncccscensus_get_zip_files($batch);
+    if (!is_array($files)) {
+         return false;
+    }
+
+    $date = usergetdate(time(), get_user_timezone());
+    $filename = date('MdY_Hi', mktime($date['hours'], $date['minutes'], 0, $date['mon'], $date['mday'], $date['year']));
+    $filename = $filename.'-'.$batch.'.zip';
+    $fs = get_file_storage();
+
+    // Check to see if file exists.
+    $contextid = context_system::instance()->id;
+    $file = $fs->get_file($contextid, 'report_ncccscensus', 'archive', $batch, '/report_ncccscensus/', $filename);
+    if (!$file) {
+        // Prepare file record object.
+        $fileinfo = array(
+            'contextid' => context_system::instance()->id,
+            'component' => 'report_ncccscensus',
+            'filearea' => 'archive',
+            'itemid' => $batch,
+            'filepath' => '/report_ncccscensus/',
+            'filename' => $filename);
+        $file = $fs->create_file_from_string($fileinfo, '');
+    }
+
+    $parentpath = $file->get_parent_directory()->get_filepath();
+    $filepath = explode('/', trim($file->get_filepath(), '/'));
+    $filepath = array_pop($filepath);
+
+    // Generate zip.
+    $zipper = get_file_packer('application/zip');
+
+    $record = $DB->get_record('ncccscensus_batch', array('id' => $batch));
+    $contextid = context_system::instance()->id;
+    $path = 'report_ncccscensus';
+    $newfile = $zipper->archive_to_storage($files, $contextid, $path, 'archive', $batch, $parentpath, $filename, $USER->id);
+    if ($newfile) {
+        // Mark batch as complete.
+        $record->zipfile = $filename;
+    }
+    $record->status = 1;
+    $DB->update_record('ncccscensus_batch', $record);
+    $info = array();
+    // Delete pdf files.
+    foreach ($files as $filename => $fullfilename) {
+        @unlink($fullfilename);
+        $info = pathinfo($fullfilename);
+    }
+    if (!empty($info['dirname'])) {
+        @rmdir($info['dirname']);
+    }
+}
+
+/**
+ * Performs the bulk report function.
+ *
+ * @param array $formdata the form data
+ * @return bool False on failure
+ * @uses $DB
+ */
+function ncccscensus_generate_bulk_report($formdata) {
+    global $DB;
+    $courses = ncccscensus_get_courses($formdata);
+    if (!(is_array($courses) && count($courses) > 0)) {
+        return false;
+    }
+    // Generate random batch id.
+    $report = new stdClass;
+    $report->starttime = usertime(time(), get_user_timezone());
+    $batchid = $DB->insert_record('ncccscensus_batch', $report);
+    foreach ($courses as $course) {
+        $report = new stdClass;
+        $report->batchid = $batchid;
+        $report->course = $course;
+        $report->starttime = usertime(time(), get_user_timezone());
+        $report->reportstartdate = $formdata->startdate;
+        $report->reportenddate = $formdata->enddate;
+        $DB->insert_record('ncccscensus_reports', $report);
+    }
+    return $batchid;
+}
+
+
+/**
+ * Delete all reports.
+ *
+ * @return void
+ * @uses $DB
+ */
+function ncccscensus_bulk_report_delete_all() {
+    global $DB;
+    $batches = $DB->get_records('ncccscensus_batch', null);
+    foreach ($batches as $batch) {
+        ncccscensus_bulk_report_cancel($batch->id);
+    }
+}
+
+/**
+ * Cancel bulk report generation or delete if complete.
+ *
+ * @param string $batchid The batchid for the bulk report
+ * @return void
+ * @uses $DB
+ */
+function ncccscensus_bulk_report_cancel($batchid) {
+    global $DB;
+    $files = ncccscensus_get_zip_files($batchid);
+    $batch = $DB->get_record('ncccscensus_batch', array('id' => $batchid));
+    $reports = $DB->get_records('ncccscensus_reports', array('batchid' => $batchid));
+    $DB->delete_records('ncccscensus_batch', array('id' => $batchid));
+    $DB->delete_records('ncccscensus_reports', array('batchid' => $batchid));
+    if (!empty($batch->zipfile)) {
+        $fs = get_file_storage();
+        // Check to see if file exists.
+        $path = 'report_ncccscensus';
+        $contextid = context_system::instance()->id;
+        $file = $fs->get_file($contextid, $path, 'archive', $batch->id, '/report_ncccscensus/', $batch->zipfile);
+        // Delete it if it exists.
+        if ($file) {
+            $file->delete();
+        }
+    } else {
+        if ($files == false) {
+            return;
+        }
+        $info = array();
+        // Delete temporary pdf files.
+        foreach ($files as $filename => $fullfilename) {
+            if (file_exists($fullfilename)) {
+                @unlink($fullfilename);
+            }
+            $info = pathinfo($fullfilename);
+        }
+        if (!empty($info['dirname']) && file_exists($info['dirname'])) {
+            @rmdir($info['dirname']);
+        }
+    }
+}
+
+/**
+ * Retrieves a single bulk report status.
+ *
+ * @param string $batchid The batchid for the bulk report
+ * @return bool|array False on failure, array with bulk report status
+ * @uses $DB
+ */
+function ncccscensus_bulk_report_status($batchid) {
+    global $DB;
+    $data = array();
+    $data['totalcourses'] = $DB->count_records('ncccscensus_reports', array('batchid' => $batchid));
+    if (empty($data['totalcourses']) || $data['totalcourses'] === 0) {
+        return false;
+    }
+    $data['totalcomplete'] = $DB->count_records('ncccscensus_reports', array('batchid' => $batchid, 'status' => 1));
+    $data['totalwaiting'] = $data['totalcourses'] - $data['totalcomplete'];
+    $record = $DB->get_record('ncccscensus_reports', array('batchid' => $batchid), 'starttime');
+    $data['starttime'] = userdate($record->starttime);
+    return $data;
+}
+
+
+/**
+ * Retrieves a all bulk report status.
+ *
+ * @param string $batchid The batchid for the bulk report
+ * @return array with bulk report status
+ * @uses $DB
+ */
+function ncccscensus_bulk_report_status_all() {
+    global $DB;
+    $query = 'SELECT batchid, nb.zipfile, COUNT(*) totalcourses, SUM(nr.status = 0) totalwaiting,';
+    $query .= ' SUM(nr.status = 1) totalcomplete, nr.starttime';
+    $query .= ' FROM {ncccscensus_reports} nr, {ncccscensus_batch} nb WHERE nb.id = nr.batchid';
+    $query .= ' GROUP BY nr.batchid ORDER BY nr.starttime DESC LIMIT 200';
+    $all = $DB->get_records_sql($query);
+    foreach ($all as $key => $value) {
+        $all[$key]->starttime = userdate($all[$key]->starttime);
+    }
+    return $all;
+}
+
+/**
+ * Locates courses in categories.
+ *
+ * @param array $categories List of ids of categories.
+ * @return bool|array False on failure, Array of courses on success
+ * @uses $DB
+ */
+function ncccscensus_get_category_courses($categories, $limittocourses = false) {
+    global $DB;
+    if (count($categories) == 0) {
+        return false;
+    }
+    $categorycourses = Array();
+    $tempcategory = $DB->get_in_or_equal($categories);
+    $limittosql = "";
+    if (is_array($limittocourses) && count($limittocourses) > 0) {
+        $limittoin = $DB->get_in_or_equal($limittocourses);
+        $limittosql = " AND id $limittoin[0] ";
+        foreach ($limittoin[1] as $temp) {
+            array_push($tempcategory[1], $temp);
+        }
+    }
+    $tempcourses = $DB->get_records_sql("SELECT id FROM {course} WHERE category $tempcategory[0] $limittosql ", $tempcategory[1]);
+    foreach ($tempcourses as $course) {
+        $categorycourses[] = $course->id;
+    }
+    if (count($categorycourses) == 0) {
+        return false;
+    }
+    return $categorycourses;
+}
+
+/**
+ * Locates courses to report on.
+ *
+ * @param array $formdata the form data
+ * @return bool|array False on failure, Array of courses on success
+ * @uses $DB
+ */
+function ncccscensus_get_courses($formdata) {
+    global $CFG, $DB;
+    require_once($CFG->libdir.'/accesslib.php');
+
+    if (empty($formdata->courses) && empty($formdata->teachers) && empty($formdata->categories)) {
+         // No data to select courses.
+         return false;
+    }
+
+    if (empty($formdata->courses) && empty($formdata->teachers) && !empty($formdata->categories)) {
+        // Show all courses in the categories selected.
+        $categories = preg_split('/,/', $formdata->categories);
+        return ncccscensus_get_category_courses($categories);
+    }
+
+    if (!empty($formdata->courses) && empty($formdata->teachers)) {
+        // Only courses selected.
+        $courses = preg_split('/,/', $formdata->courses);
+        if (count($courses) > 0) {
+            return $courses;
+        }
+        return false;
+    }
+
+    $teachercourses = Array();
+    if (!empty($formdata->teachers)) {
+        // Load courses by teacher.
+        $tempin = preg_split('/,/', $formdata->teachers);
+        if (count($tempin) > 0) {
+            $teachers = $DB->get_in_or_equal($tempin);
+            $teachers = $DB->get_in_or_equal($tempin);
+            $query = "SELECT DISTINCT c.instanceid courseid FROM {role_assignments} ra,";
+            $query .= " {context} c, {role_capabilities} rc WHERE rc.capability in (?, ?, ?, ?)";
+            $query .= " AND rc.roleid = ra.roleid AND c.id = ra.contextid AND c.contextlevel = ".CONTEXT_COURSE;
+            $query .= " AND ra.userid $teachers[0]";
+            array_unshift($teachers[1], 'mod/quiz:grade');
+            array_unshift($teachers[1], 'mod/assignment:grade');
+            array_unshift($teachers[1], 'mod/forum:rate');
+            array_unshift($teachers[1], 'mod/glossary:rate');
+            $tempcourses = $DB->get_records_sql($query, $teachers[1]);
+            foreach ($tempcourses as $course) {
+                $teachercourses[] = $course->courseid;
+            }
+        }
+    }
+
+    if (!empty($formdata->courses) && count($teachercourses) > 0) {
+        // If there is courses selected and teachers, only show the common courses.
+        $tempcourses = preg_split('/,/', $formdata->courses);
+        $courses = Array();
+        foreach ($tempcourses as $course) {
+            if (in_array($course, $teachercourses)) {
+                $courses[] = $course;
+            }
+        }
+        if (count($courses) > 0) {
+            return $courses;
+        } else {
+            return false;
+        }
+    }
+
+    // Categories and teachers selected.
+    if (!empty($formdata->categories) && count($teachercourses) > 0 && empty($formdata->courses)) {
+        $categories = preg_split('/,/', $formdata->categories);
+        return ncccscensus_get_category_courses($categories, $teachercourses);
+    }
+
+    if (count($teachercourses) > 0) {
+        // Only teacher(s) are selected.
+        return $teachercourses;
+    }
+
+    return false;
+}
+
+/**
  * Performs the report function.
  *
  * @param array $formdata the form data
  * @param int $type the report type
+ * @param string $saveto File to save the pdf report to.
  * @return bool False on failure
  * @uses $CFG, $DB
  */
-function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
+function ncccscensus_generate_report($formdata, $type = ACTION_VIEW, $saveto = false) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/moodlelib.php');
-
     $reportname = 'report_ncccscensus';
 
     $cid = $formdata->id;
@@ -505,7 +965,8 @@ function ncccscensus_generate_report($formdata, $type = ACTION_VIEW) {
         if ($footermessage = get_config('report_ncccscensus', 'footermessage')) {
             $censusreport->bottom .= $footermessage;
         }
-        $censusreport->download();
+        $censusreport->download($saveto);
+        return true;
 
     } else if ($type == ACTION_CSV) {
 
@@ -677,7 +1138,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
     require_once($CFG->dirroot.'/lib/gradelib.php');
     require_once($CFG->dirroot.'/lib/grade/constants.php');
     require_once($CFG->dirroot.'/lib/grade/grade_item.php');
-    require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+    require_once($CFG->dirroot.'/mod/quiz/locallib.php');
 
     $reportname = 'report_ncccscensus';
     $context = context_course::instance($courseid);
@@ -1024,6 +1485,223 @@ function report_ncccscensus_extend_navigation_course($navigation, $course, $cont
         $navigation->add(get_string('pluginname', 'report_ncccscensus'), $url, navigation_node::TYPE_SETTING, null, null,
                 new pix_icon('i/report', ''));
     }
+}
+
+/**
+ * Searches for teachers using a substring match.
+ *
+ * @param string $query The substring to search for.
+ * @param array $courses An array of Arrays with indicies 'id' and 'name'.
+ * @param array $coursecategories An array of Arrays with indicies 'id' and 'name'.
+ * @return array An array of matching teachers or returns an array with a no matches found string.
+ */
+function report_ncccscensus_teacher_search($query, $courses = array(), $coursecategories = array()) {
+    global $DB;
+
+    $results = array();
+    $users = array();
+
+    if (empty($coursecategories) && empty($courses)) {
+        $contextlevels = null;
+        // Get roles with capability.
+        $roles = get_roles_with_capability('moodle/grade:edit', CAP_ALLOW);
+
+        $roles = array_keys($roles);
+
+        // Retrieving all user columns because the user object needs to be passed through to Moodle's fullname() function.
+        $rolelist = $DB->get_in_or_equal($roles);
+        $rolelist[1][] = "%{$query}%";
+        $rolelist[1][] = "%{$query}%";
+        $rolelist[1][] = "%{$query}%";
+
+        $sql = "SELECT ra.id AS raid, u.*, ra.contextid
+                  FROM {role_assignments} ra
+                  JOIN {user} u ON u.id = ra.userid
+                 WHERE ra.roleid {$rolelist[0]}
+                       AND (u.username LIKE ?
+                       OR u.firstname LIKE ?
+                       OR u.lastname LIKE ?)";
+        $records = $DB->get_records_sql($sql, $rolelist[1]);
+
+        $usersadded = array();
+        foreach ($records as $record) {
+            if (isset($usersadded[$record->id])) {
+                continue;
+            }
+
+            if (has_capability('moodle/grade:edit', context::instance_by_id($record->contextid), $record->id)) {
+                $usersadded[$record->id] = 0;
+                $results[] = array('id' => $record->id, 'name' => fullname($record)." ({$record->username})");
+            }
+        }
+
+    } elseif ((empty($coursecategories) && !empty($courses)) || (!empty($coursecategories) && !empty($courses))) {
+        // Search of users within a course.
+
+        $courses = array_map('report_ncccscensus_format_category_data', $courses);
+        $results = report_ncccscensus_get_users_with_capability_in_contexts($courses, 'moodle/grade:edit', $query);
+
+    } elseif (!empty($coursecategories) && empty($courses)) {
+        // Search for courses within a category and for users within those courses.
+
+        // Format coursecategories so that it's only an array of course category ids.
+        $coursecategories = array_map('report_ncccscensus_format_category_data', $coursecategories);
+
+        // Get an array of courses in the course category.
+        $courses = ncccscensus_get_category_courses($coursecategories);
+
+        $results = report_ncccscensus_get_users_with_capability_in_contexts($courses, 'moodle/grade:edit', $query);
+    }
+
+    if (empty($results)) {
+        return array(array('name' => get_string('noresults', 'report_ncccscensus')." $query"));
+    }
+
+    return $results;
+}
+
+/**
+ * This function iterates over an array of courses, finds users who have the capability in the course context
+ * and returns an array of arrays where the inner array of user data having indicies 'id' and 'name'.
+ * @param array $courseids An array of course ids.
+ * @param string $capability A Moodle capability string.
+ * @param string $query A search string.
+ * @return array An array of arrays where the inner array has indicies 'id' and 'name'.
+ */
+function report_ncccscensus_get_users_with_capability_in_contexts($courseids, $capability, $query) {
+    $results = array();
+
+    if (!is_array($courseids)) {
+        return $results;
+    }
+
+    foreach($courseids as $courseid) {
+        if (empty($courseid)) {
+            continue;
+        }
+
+        $users = get_users_by_capability(context_course::instance($courseid), 'moodle/grade:edit', 'u.*');
+
+        if (empty($users)) {
+            continue;
+        }
+
+        // Use a call back function to format user data.
+        $acquery = array_fill(0, count($users), $query);
+        $userdata = array_map('report_ncccscensus_format_teacher_user_data', $users, $acquery);
+
+        foreach ($userdata as $data) {
+            if (!isset($data['id'])) {
+                continue;
+            }
+
+            $results[] = $data;
+        }
+    }
+
+    return $results;
+}
+
+/**
+ * This callback function returns only the id of the array.  This is strictly a helper function.
+ * @param array $data An array with an 'id' index.
+ * @return int The id value
+ */
+function report_ncccscensus_format_category_data($data) {
+    return $data['id'];
+}
+
+/**
+ * This callback function checks if $userquery string is contained in the Moodle user object's firstname, lastname or username
+ * property.  If the user query exists then user's full name and user id is returned in an array.  Otherwise an empty
+ * array is returned.
+ * @param object $user A Moodle user object represented.
+ * @param string $userquery A string of text.
+ * @return array An array with indicies 'name' and 'id'.
+ */
+function report_ncccscensus_format_teacher_user_data($user, $userquery) {
+    $contains = false === strpos($user->firstname, $userquery) ? false : true;
+    $contains |= false === strpos($user->lastname, $userquery) ? false : true;
+    $contains |= false === strpos($user->username, $userquery) ? false : true;
+
+    if ($contains) {
+        return array('id' => $user->id, 'name' => fullname($user)." ({$user->username})");
+    }
+
+    return array();
+}
+
+/**
+ * Searches for courses using a substring match and optionally limits by category.
+ *
+ * @param string $query The substring to search for.
+ * @param array $categoryquery Array of categories to search for.
+ * @return array Matching courses or returns no matches found.
+ */
+function report_ncccscensus_course_search($query, $categoryquery) {
+    global $DB;
+    $time = usertime(time(), get_user_timezone());
+    $param = array($time, $time, "%$query%");
+    $categorysql = "";
+
+    if (is_array($categoryquery) && count($categoryquery) > 0) {
+        $tempcategories = array();
+        foreach ($categoryquery as $category) {
+            array_push($tempcategories, $category['id']);
+        }
+        $categories = $DB->get_in_or_equal($tempcategories);
+        $categorysql = " AND category $categories[0] ";
+        foreach ($categories[1] as $temp) {
+            array_push($param, $temp);
+        }
+    }
+
+    $sqlquery = 'SELECT DISTINCT c.id, c.fullname FROM {course} c, {enrol} e, {user_enrolments} ue WHERE';
+    $sqlquery .= ' e.courseid = c.id AND ue.enrolid = e.id ';
+    $sqlquery .= ' AND ue.timestart < ? AND (ue.timeend > ? OR ue.timeend = 0)';
+    $sqlquery .= ' AND c.fullname LIKE ? '.$categorysql;
+    $courses = $DB->get_records_sql($sqlquery, $param);
+    $results = array();
+
+    foreach ($courses as $course) {
+        array_push($results, array('id' => $course->id, 'name' => $course->fullname));
+    }
+    if (count($results) === 0) {
+        array_push($results, array('name' => get_string('noresults', 'report_ncccscensus')." $query"));
+    }
+    return $results;
+}
+
+/**
+ * Searches for categories using a substring match.
+ *
+ * @param string $query The substring to search for.
+ * @return array Matching categories or returns no matches found.
+ */
+function report_ncccscensus_category_search($query) {
+    global $DB;
+    $sqlquery = 'SELECT id, name FROM {course_categories} WHERE name LIKE ? ';
+    $categories = $DB->get_records_sql($sqlquery, array("%$query%"));
+    $results = array();
+    foreach ($categories as $category) {
+        $category = coursecat::get($category->id);
+        $parents = $category->get_parents();
+        $categorynames = array();
+        foreach ($parents as $categoryid) {
+            $tempcategory = coursecat::get($categoryid);
+            array_push($categorynames, $tempcategory->get_formatted_name());
+        }
+        array_push($categorynames, $category->get_formatted_name());
+        $name = array_pop($categorynames);
+        if (count($categorynames) > 0) {
+            $name = array_pop($categorynames).' / '.$name;
+        }
+        array_push($results, array('id' => $category->id, 'name' => $name));
+    }
+    if (count($results) === 0) {
+        array_push($results, array('name' => get_string('noresults', 'report_ncccscensus')." $query"));
+    }
+    return $results;
 }
 
 /**
