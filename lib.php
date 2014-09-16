@@ -1341,7 +1341,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {quiz} qu ON q.quiz = qu.id
         INNER JOIN {grade_items} gi ON gi.iteminstance = qu.id
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = q.userid
-         LEFT JOIN {quiz_grades} qg ON qg.quiz = qu.id
+         LEFT JOIN {quiz_grades} qg ON qg.quiz = qu.id AND qg.userid = q.userid
         INNER JOIN {user} u ON u.id = q.userid AND q.userid in ('.$users.')
              WHERE qu.course = :courseid
                    AND q.state not in ("'.quiz_attempt::IN_PROGRESS.'", "'.quiz_attempt::ABANDONED.'")
