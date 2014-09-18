@@ -257,8 +257,10 @@ function report_ncccscensus_process_batch($batch) {
             $report->fullfilename = $fullfilename;
             // Indicate that there was a pdf generated, if not remove as remove in zip will not be called.
             $tempdirused = true;
+            $report->status = 1;
+        } else {
+            $report->status = 2;
         }
-        $report->status = 1;
         // Mark report generation as complete.
         $DB->update_record('ncccscensus_reports', $report);
     }

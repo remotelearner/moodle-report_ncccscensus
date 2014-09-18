@@ -50,7 +50,11 @@ if (is_array($reports) && count($reports) > 0) {
     echo '</tr>';
     foreach ($reports as $key => $value) {
         echo '<tr><td>'.$value->starttime.'</td>';
-        echo '<td>'.$value->totalcourses.'</td>';
+        if ($value->totalwaiting > 0) {
+            echo '<td>'.$value->totalcourses.'</td>';
+        } else {
+            echo '<td>'.$value->totalcomplete.'</td>';
+        }
         if ($value->totalwaiting > 0) {
             echo '<td><span style="color: red">'.get_string('processing', 'report_ncccscensus').'</span></td>';
         } else {
