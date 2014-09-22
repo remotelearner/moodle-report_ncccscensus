@@ -1284,7 +1284,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
         INNER JOIN {assign} a ON s.assignment = a.id
         INNER JOIN {grade_items} gi ON gi.iteminstance = a.id
          LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = s.userid
-         LEFT JOIN {assign_grades} ag ON ag.assignment = a.id
+         LEFT JOIN {assign_grades} ag ON ag.assignment = a.id AND ag.userid = s.userid
         INNER JOIN {user} u ON u.id = s.userid AND s.userid in ('.$users.')
              WHERE a.course = :courseid
                    AND s.userid != 0
