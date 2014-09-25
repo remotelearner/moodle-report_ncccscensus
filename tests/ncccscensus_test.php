@@ -56,7 +56,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
 
         // Test subcategory selection.
         $formdata->categories = $data['category2']->id;
-        $courses = array($data['course2']->id);
+        $courses = array($data['course2']->id, $data['course6']->id);
         $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
 
         // Test subcategory selection with two courses in it.
@@ -66,7 +66,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
 
         // Test two category selections with three courses in it.
         $formdata->categories = join(',', array($data['category2']->id, $data['category3']->id));
-        $courses = array($data['course2']->id, $data['course3']->id, $data['course4']->id, $data['course5']->id);
+        $courses = array($data['course2']->id, $data['course6']->id, $data['course3']->id, $data['course4']->id, $data['course5']->id);
         $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
     }
 
@@ -326,6 +326,9 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $course = array('name' => 'Course 5', 'category' => $data['category3']->id);
         $data['course5'] = $this->getDataGenerator()->create_course($course);
 
+        $course = array('name' => 'Course 6', 'category' => $data['category2']->id);
+        $data['course6'] = $this->getDataGenerator()->create_course($course);
+
         // Enrol some teachers.
         $this->getDataGenerator()->enrol_user($data['user1']->id, $data['course1']->id, 4);
         $this->getDataGenerator()->enrol_user($data['user1']->id, $data['course2']->id, 4);
@@ -345,8 +348,8 @@ class report_ncccscensus_testcase extends advanced_testcase {
      */
     private function createdata_for_teacherfilter() {
         // Create a teacher user.
-        $data['user1'] = $this->getDataGenerator()->create_user(array('email' => 'teacher1@example.com', 'username' => 'testteacher1'));
-        $data['user2'] = $this->getDataGenerator()->create_user(array('email' => 'teacher2@example.com', 'username' => 'testteacher2'));
+        $data['user1'] = $this->getDataGenerator()->create_user(array('email' => 'teacher1@example.com', 'username' => 'testteacher1', 'firstname' => 'john', 'lastname' => 'doe'));
+        $data['user2'] = $this->getDataGenerator()->create_user(array('email' => 'teacher2@example.com', 'username' => 'testteacher2', 'firstname' => 'John', 'lastname' => 'Doe'));
 
         // Create a 2 course categories.
         $category = array('name' => 'Summer');
@@ -388,6 +391,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
         }
 
         $results = report_ncccscensus_teacher_search('teacher', array(array('id' => $data['course1']->id)));
+
         $this->assertEquals(1, count($results));
         $this->assertArrayHasKey('name', $results[0]);
         $this->assertArrayNotHasKey('id', $results[0]);
@@ -419,14 +423,19 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $data = $this->createdata_for_teacherfilter();
 
         // Get a roles that have the capability.
-        $coursecontext = context_course::instance($data['course1']->id);
-        $roles = get_role_names_with_caps_in_context($coursecontext, array('moodle/grade:edit'));
+        $coursecontext1 = context_course::instance($data['course1']->id);
+        $coursecontext2 = context_course::instance($data['course2']->id);
+        $roles = get_role_names_with_caps_in_context($coursecontext1, array('moodle/grade:edit'));
 
         // Enrol a user into the course, giving them the role.
         $roleid = 0;
         foreach ($roles as $rid => $role) {
             $roleid = $rid;
             $this->getDataGenerator()->enrol_user($data['user1']->id, $data['course1']->id, $roleid);
+            // Enrolling in second course tests that teacher does not appear twice.
+            $this->getDataGenerator()->enrol_user($data['user1']->id, $data['course2']->id, $roleid);
+            // Enrolling another teacher to test case insenstive search.
+            $this->getDataGenerator()->enrol_user($data['user2']->id, $data['course2']->id, $roleid);
             break;
         }
 
@@ -436,24 +445,44 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $this->assertArrayHasKey('name', $results[0]);
         $this->assertArrayNotHasKey('id', $results[0]);
 
-        // Test: select category where a user with capability exists
-        $categories = array(array('id' => $data['category1']->id));
-        $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
-        $this->assertEquals(1, count($results));
+        // Test: test case insensitive search for teacher.
+        $categories = array(array('id' => $data['category1']->id), array('id' => $data['category2']->id));
+        $results = report_ncccscensus_teacher_search('john', array(), $categories);
+        $this->assertEquals(2, count($results));
         $this->assertArrayHasKey('name', $results[0]);
         $this->assertArrayHasKey('id', $results[0]);
         $this->assertEquals($data['user1']->id, $results[0]['id']);
+        $this->assertEquals($data['user2']->id, $results[1]['id']);
+
+        // Test: test case insensitive search for teacher.
+        $categories = array(array('id' => $data['category1']->id), array('id' => $data['category2']->id));
+        $results = report_ncccscensus_teacher_search('John', array(), $categories);
+        $this->assertEquals(2, count($results));
+        $this->assertArrayHasKey('name', $results[0]);
+        $this->assertArrayHasKey('id', $results[0]);
+        $this->assertEquals($data['user1']->id, $results[0]['id']);
+        $this->assertEquals($data['user2']->id, $results[1]['id']);
+
+        // Test: select category where a user with capability exists
+        $categories = array(array('id' => $data['category1']->id));
+        $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
+        $this->assertEquals(2, count($results));
+        $this->assertArrayHasKey('name', $results[0]);
+        $this->assertArrayHasKey('id', $results[0]);
+        $this->assertEquals($data['user1']->id, $results[0]['id']);
+        $this->assertEquals($data['user2']->id, $results[1]['id']);
 
         // Test: select all categories where user with capability exists
         $categories = array(array('id' => $data['category1']->id), array('id' => $data['category2']->id));
         $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
-        $this->assertEquals(1, count($results));
+        $this->assertEquals(2, count($results));
         $this->assertArrayHasKey('name', $results[0]);
         $this->assertArrayHasKey('id', $results[0]);
         $this->assertEquals($data['user1']->id, $results[0]['id']);
 
         // Remove the capability from the user's role in the course.
-        role_change_permission($roleid, $coursecontext, 'moodle/grade:edit', CAP_PREVENT);
+        role_change_permission($roleid, $coursecontext1, 'moodle/grade:edit', CAP_PREVENT);
+        role_change_permission($roleid, $coursecontext2, 'moodle/grade:edit', CAP_PREVENT);
         // Test: select all categories where no user with capability exists
         $categories = array(array('id' => $data['category1']->id), array('id' => $data['category2']->id));
         $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
@@ -462,7 +491,8 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $this->assertArrayNotHasKey('id', $results[0]);
 
         // Enrol another user to the course and give the user the capability.
-        role_change_permission($roleid, $coursecontext, 'moodle/grade:edit', CAP_ALLOW);
+        role_change_permission($roleid, $coursecontext1, 'moodle/grade:edit', CAP_ALLOW);
+        role_change_permission($roleid, $coursecontext2, 'moodle/grade:edit', CAP_ALLOW);
         $this->getDataGenerator()->enrol_user($data['user2']->id, $data['course2']->id, $roleid);
 
         // Test: select category where a user with capability exists, this should return two results

@@ -1572,6 +1572,7 @@ function report_ncccscensus_teacher_search($query, $courses = array(), $courseca
  */
 function report_ncccscensus_get_users_with_capability_in_contexts($courseids, $capability, $query) {
     $results = array();
+    $resultsid = array();
 
     if (!is_array($courseids)) {
         return $results;
@@ -1587,16 +1588,16 @@ function report_ncccscensus_get_users_with_capability_in_contexts($courseids, $c
         if (empty($users)) {
             continue;
         }
-
         // Use a call back function to format user data.
         $acquery = array_fill(0, count($users), $query);
         $userdata = array_map('report_ncccscensus_format_teacher_user_data', $users, $acquery);
 
         foreach ($userdata as $data) {
-            if (!isset($data['id'])) {
+            if (!isset($data['id']) || in_array($data['id'], $resultsid)) {
                 continue;
             }
 
+            array_push($resultsid, $data['id']);
             $results[] = $data;
         }
     }
@@ -1622,9 +1623,9 @@ function report_ncccscensus_format_category_data($data) {
  * @return array An array with indicies 'name' and 'id'.
  */
 function report_ncccscensus_format_teacher_user_data($user, $userquery) {
-    $contains = false === strpos($user->firstname, $userquery) ? false : true;
-    $contains |= false === strpos($user->lastname, $userquery) ? false : true;
-    $contains |= false === strpos($user->username, $userquery) ? false : true;
+    $contains = false === stripos($user->firstname, $userquery) ? false : true;
+    $contains |= false === stripos($user->lastname, $userquery) ? false : true;
+    $contains |= false === stripos($user->username, $userquery) ? false : true;
 
     if ($contains) {
         return array('id' => $user->id, 'name' => fullname($user)." ({$user->username})");
