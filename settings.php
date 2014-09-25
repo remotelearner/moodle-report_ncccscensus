@@ -164,18 +164,6 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configselect($name, $title, $description, $default, $optsarry);
     $settings->add($setting);
 
-    // Currently selected logo image.
-    $element = 'logoimgname';
-    $name = $reportname.'/'.$element;
-    $title = $description = get_string($element, $reportname);
-    $default = '';
-    $optsarry = array('' => '');
-    foreach (get_directory_list($CFG->dataroot.'/report/ncccscensus/pix/logo') as $imgfile) {
-        $optsarry[$imgfile] = $imgfile;
-    }
-    $setting = new admin_setting_configselect($name, $title, $description, $default, $optsarry);
-    $settings->add($setting);
-
     // Grade override colour setting.
     $element = 'gradeoverridecolour';
     $name = $reportname.'/'.$element;
