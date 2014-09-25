@@ -233,8 +233,8 @@ function report_ncccscensus_cron() {
 function report_ncccscensus_process_batch($batch) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/moodlelib.php');
-    // Retrieve first 200 reports to generate.
-    $proccess = $DB->get_records('ncccscensus_reports', array('batchid' => $batch, 'status' => 0), '', '*', 0, 200);
+    // Retrieve first 50 reports to generate at a time and prevent cron job from lasting longer than 5 minutes.
+    $proccess = $DB->get_records('ncccscensus_reports', array('batchid' => $batch, 'status' => 0), '', '*', 0, 50);
     $files = array();
     $tempdirused = false;
     $dir = make_temp_directory("ncccscensus$batch", false);

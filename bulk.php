@@ -60,7 +60,7 @@ if ($formdata = $mform->get_data()) {
         echo $OUTPUT->box_end();
     } else {
         echo $OUTPUT->box_start();
-        echo '<h1>'.get_string('reportqueued', 'report_ncccscensus').'</b>: '.$result.'</h1><br>';
+        echo '<h1>'.get_string('reportqueued', 'report_ncccscensus').'</h1><br>';
         echo '<div style="text-align: center; width: 100%;">';
         echo '<a href="'.$statusurl.'">'.get_string('viewreportstatus', 'report_ncccscensus').'</a>';
         echo '<br></div>';
