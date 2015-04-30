@@ -124,6 +124,7 @@ $string['submissionstatusdraft'] = 'Draft';
 $string['submissionstatusfinished'] = 'Finished';
 $string['submissionstatusinprogress'] = 'In progress';
 $string['submissionstatusna'] = 'N/A';
+$string['submissionstatusnew'] = 'New';
 $string['submissionstatusreopened'] = 'Reopened';
 $string['submissionstatussubmitted'] = 'Submitted';
 $string['underscores'] = '________________________';
