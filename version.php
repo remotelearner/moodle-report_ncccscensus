@@ -27,7 +27,7 @@ if (!defined('MOODLE_INTERNAL')) {
     die();
 }
 
-$plugin->version  = 2014073102;       // The current block version (Date: YYYYMMDDXX)
+$plugin->version  = 2014073103;       // The current block version (Date: YYYYMMDDXX)
 $plugin->requires = 2013111804;       // Requires this Moodle version
 $plugin->component = 'report_ncccscensus'; // Full name of the plugin (used for diagnostics).
 $plugin->maturity = MATURITY_STABLE;

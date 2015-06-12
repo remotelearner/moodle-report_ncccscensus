@@ -1287,6 +1287,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
          LEFT JOIN {assign_grades} ag ON ag.assignment = a.id AND ag.userid = s.userid
         INNER JOIN {user} u ON u.id = s.userid AND s.userid in ('.$users.')
              WHERE a.course = :courseid
+                   AND s.status != "new"
                    AND s.userid != 0
                    AND gi.itemmodule = "assign"
                    AND s.timemodified >= :timestart
