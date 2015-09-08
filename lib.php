@@ -1140,6 +1140,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
     require_once($CFG->dirroot.'/lib/gradelib.php');
     require_once($CFG->dirroot.'/lib/grade/constants.php');
     require_once($CFG->dirroot.'/lib/grade/grade_item.php');
+    require_once($CFG->dirroot.'/mod/assign/locallib.php');
     require_once($CFG->dirroot.'/mod/quiz/locallib.php');
 
     $reportname = 'report_ncccscensus';
@@ -1181,7 +1182,6 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
 
     $rs = $DB->get_recordset_sql($sql, $dbparams);
 
-    $datestring = 'n/j/y';
     foreach ($rs as $record) {
         if (empty($gis[$record->giid])) {
             $gis[$record->giid] = new grade_item(array('id' => $record->giid));
@@ -1194,7 +1194,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
                 $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = date($datestring, $record->timecreated);
+                $date  = userdate($record->timecreated, get_string('dateformat', $reportname));
             }
 
             $result = new stdClass;
@@ -1206,7 +1206,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleforum', $reportname);
             $result->status      = get_string('submissionstatusna', $reportname); // No status info required for 'forum'.
-            $result->submitdate  = date($datestring, $record->timesubmitted);
+            $result->submitdate  = userdate($record->timesubmitted, get_string('dateformat', $reportname));
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -1253,7 +1253,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
                 $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = date($datestring, $record->timecreated);
+                $date  = userdate($record->timecreated, get_string('dateformat', $reportname));
             }
 
             $result = new stdClass;
@@ -1265,7 +1265,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleglossary', $reportname);
             $result->status      = get_string('submissionstatusna', $reportname); // No status info required for 'glossary'.
-            $result->submitdate  = date($datestring, $record->timesubmitted);
+            $result->submitdate  = userdate($record->timesubmitted, get_string('dateformat', $reportname));
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -1276,9 +1276,10 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
 
     unset($rs);
 
+
     // Pass #3 - Get any graded assignment entries from the DB.
     $sql = 'SELECT u.id AS userid, s.id AS entid, gi.id AS giid, u.firstname, u.lastname, u.idnumber, s.status,
-                   gi.itemname, gg.finalgrade, s.timecreated AS timesubmitted, ag.timemodified AS timegraded, u.alternatename,
+                   gi.itemname, gg.finalgrade, s.timemodified AS timesubmitted, ag.timemodified AS timegraded, u.alternatename,
                    s.timemodified AS timecreated, gg.overridden, u.firstnamephonetic, u.lastnamephonetic, u.middlename
               FROM {assign_submission} s
         INNER JOIN {assign} a ON s.assignment = a.id
@@ -1287,7 +1288,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
          LEFT JOIN {assign_grades} ag ON ag.assignment = a.id AND ag.userid = s.userid
         INNER JOIN {user} u ON u.id = s.userid AND s.userid in ('.$users.')
              WHERE a.course = :courseid
-                   AND s.status != "new"
+                   AND s.status NOT IN ("'.ASSIGN_SUBMISSION_STATUS_NEW.'", "'.ASSIGN_SUBMISSION_STATUS_DRAFT.'")
                    AND s.userid != 0
                    AND gi.itemmodule = "assign"
                    AND s.timemodified >= :timestart
@@ -1313,7 +1314,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
                 $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = date($datestring, $record->timegraded);
+                $date  = userdate($record->timegraded, get_string('dateformat', $reportname));
             }
 
             $result = new stdClass;
@@ -1325,7 +1326,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('moduleassignment', $reportname);
             $result->status      = get_string('submissionstatus'.$record->status, $reportname);
-            $result->submitdate  = date($datestring, $record->timesubmitted);
+            $result->submitdate  = userdate($record->timesubmitted, get_string('dateformat', $reportname));
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
@@ -1338,7 +1339,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
 
     // Pass #4 - Get any graded quiz from the DB.
     $sql = 'SELECT u.id AS userid, q.id AS qid, gi.id AS giid, u.firstname, u.lastname, u.idnumber, q.state,
-                   gi.itemname, gg.finalgrade, q.timefinish AS timesubmitted, q.timemodified AS timecreated, gg.overridden,
+                   gi.itemname, gg.finalgrade, q.timefinish AS timesubmitted, q.timefinish AS timecreated, gg.overridden,
                    qg.timemodified AS timegraded, u.firstnamephonetic, u.lastnamephonetic, u.middlename, u.alternatename
               FROM {quiz_attempts} q
         INNER JOIN {quiz} qu ON q.quiz = qu.id
@@ -1347,11 +1348,11 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
          LEFT JOIN {quiz_grades} qg ON qg.quiz = qu.id AND qg.userid = q.userid
         INNER JOIN {user} u ON u.id = q.userid AND q.userid in ('.$users.')
              WHERE qu.course = :courseid
-                   AND q.state not in ("'.quiz_attempt::IN_PROGRESS.'", "'.quiz_attempt::ABANDONED.'")
+                   AND q.state NOT IN ("'.quiz_attempt::IN_PROGRESS.'", "'.quiz_attempt::ABANDONED.'")
                    AND q.userid != 0
                    AND gi.itemmodule = "quiz"
-                   AND q.timemodified >= :timestart
-                   AND q.timemodified <= :timeend';
+                   AND q.timefinish >= :timestart
+                   AND q.timefinish <= :timeend';
 
     $dbparams = array(
         'courseid'  => $courseid,
@@ -1373,7 +1374,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
                 $date  = '';
             } else {
                 $grade = grade_format_gradevalue($record->finalgrade, $gis[$record->giid]);
-                $date  = date($datestring, $record->timegraded);
+                $date  = userdate($record->timegraded, get_string('dateformat', $reportname));
             }
 
             $result = new stdClass;
@@ -1385,7 +1386,7 @@ function ncccscensus_build_grades_array($courseid, $users, $startdate, $enddate)
             $result->activity    = $record->itemname;
             $result->module      = get_string('modulequiz', $reportname);
             $result->status      = get_string('submissionstatus'.$record->state, $reportname);
-            $result->submitdate  = date($datestring, $record->timesubmitted);
+            $result->submitdate  = userdate($record->timesubmitted, get_string('dateformat', $reportname));
             $result->grade       = $grade;
             $result->overridden  = $record->overridden;
             $result->timecreated = $record->timecreated;
