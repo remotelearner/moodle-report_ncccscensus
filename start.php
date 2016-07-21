@@ -83,7 +83,7 @@ echo "<a href=\"$bulkurl\">".get_string('selectallauto', 'report_ncccscensus');
 echo "</a> - ".get_string('selectallautodesc', 'report_ncccscensus');
 echo $OUTPUT->box_end();
 
-$reports = $DB->count_records('ncccscensus_batch');
+$reports = $DB->count_records('report_ncccscensus_batch');
 if ($reports) {
     echo $OUTPUT->box_start();
     echo "<ul>";

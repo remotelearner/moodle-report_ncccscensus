@@ -42,11 +42,11 @@ echo $OUTPUT->header();
 echo $OUTPUT->box_start();
 if ($mode == 'all') {
     echo '<h1>'.get_string('allreportsdeleted', 'report_ncccscensus').'</h1>';
-    ncccscensus_bulk_report_delete_all();
+    report_ncccscensus_bulk_report_delete_all();
 } else {
     echo '<h1>'.get_string('reportdeleted', 'report_ncccscensus').'</h1>';
     $batchid = required_param('batchid', PARAM_INT);
-    ncccscensus_bulk_report_cancel($batchid);
+    report_ncccscensus_bulk_report_cancel($batchid);
 }
 
 echo '<div style="text-align: center">';

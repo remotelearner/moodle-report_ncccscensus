@@ -42,24 +42,24 @@ $PAGE->set_heading($SITE->fullname);
 $PAGE->set_pagelayout('report');
 $PAGE->navbar->add(get_string('reportlink', 'report_ncccscensus'));
 
-$mform = new ncccscensus_setup_query_form($PAGE->url, $cid);
+$mform = new report_ncccscensus_setup_query_form($PAGE->url, $cid);
 
 if ($mform->is_cancelled()) {
     redirect($CFG->wwwroot.'/course/view.php?id='.$cid);
     die();
 }
 
-$action = optional_param('action', ACTION_VIEW, PARAM_INT);
+$action = optional_param('action', REPORT_NCCCSCENSUS_ACTION_VIEW, PARAM_INT);
 
-if ($action == ACTION_VIEW) {
+if ($action == REPORT_NCCCSCENSUS_ACTION_VIEW) {
     echo $OUTPUT->header();
     echo $OUTPUT->box_start();
 }
 
 if ($formdata = $mform->get_data()) {
 
-    if (ncccscensus_generate_report($formdata, $action) === false) {
-        if ($action !== ACTION_VIEW) {
+    if (report_ncccscensus_generate_report($formdata, $action) === false) {
+        if ($action !== REPORT_NCCCSCENSUS_ACTION_VIEW) {
             echo $OUTPUT->header();
             echo $OUTPUT->box_start();
             $mform->display();
@@ -67,7 +67,7 @@ if ($formdata = $mform->get_data()) {
 
         echo $OUTPUT->notification(get_string('nodatafound', 'report_ncccscensus'), 'notifysuccess');
 
-        if ($action !== ACTION_VIEW) {
+        if ($action !== REPORT_NCCCSCENSUS_ACTION_VIEW) {
             echo $OUTPUT->box_end();
             echo $OUTPUT->footer();
         }
@@ -77,7 +77,7 @@ if ($formdata = $mform->get_data()) {
     $mform->display();
 }
 
-if ($action == ACTION_VIEW) {
+if ($action == REPORT_NCCCSCENSUS_ACTION_VIEW) {
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }
