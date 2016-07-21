@@ -38,7 +38,7 @@ $PAGE->navbar->add(get_string('reportlink', 'report_ncccscensus'));
 echo $OUTPUT->header();
 echo $OUTPUT->box_start();
 echo '<h1>'.get_string('reportstatus', 'report_ncccscensus').'</h1>';
-$reports = ncccscensus_bulk_report_status_all();
+$reports = report_ncccscensus_bulk_report_status_all();
 if (is_array($reports) && count($reports) > 0) {
     echo '<center><table class="admintable generaltable">';
     echo '<tr><th class="header c0 leftalign" style="" scope="col"><b>';
@@ -94,7 +94,7 @@ if (is_array($reports) && count($reports) > 0) {
 }
 echo $OUTPUT->box_end();
 
-$reports = $DB->count_records('ncccscensus_batch');
+$reports = $DB->count_records('report_ncccscensus_batch');
 echo $OUTPUT->box_start();
 echo "<ul>";
 $url = new moodle_url('/report/ncccscensus/status.php');

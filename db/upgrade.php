@@ -77,4 +77,22 @@ function xmldb_report_ncccscensus_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2014073101, 'report', 'ncccscensus');
     }
 
+    // Upgrade step: Rename tables to match Moodle database rules.
+    if ($oldversion < 2014073102) {
+
+        // Rename table ncccscensus_reports, if it exists.
+        $table = new xmldb_table('ncccscensus_reports');
+        if ($dbman->table_exists($table)) {
+            $dbman->rename_table($table, 'report_ncccscensus_reports');
+        }
+
+        // Rename table ncccscensus_batch, if it exists.
+        $table = new xmldb_table('ncccscensus_batch');
+        if ($dbman->table_exists($table)) {
+            $dbman->rename_table($table, 'report_ncccscensus_batch');
+        }
+
+        // Ncccscensus savepoint reached.
+        upgrade_plugin_savepoint(true, 2014073102, 'report', 'ncccscensus');
+    }
 }

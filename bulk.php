@@ -42,7 +42,7 @@ $jsmodule = array(
 $PAGE->requires->js_init_call('init_ncccsautocomplete', null, false, $jsmodule);
 
 $actions = optional_param('actions', '', PARAM_RAW);
-$mform = new ncccscensus_setup_bulk_form($PAGE->url, $actions);
+$mform = new report_ncccscensus_setup_bulk_form($PAGE->url, $actions);
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/admin/'));
@@ -53,7 +53,7 @@ $statusurl = new moodle_url('/report/ncccscensus/status.php');
 echo $OUTPUT->header();
 
 if ($formdata = $mform->get_data()) {
-    $result = ncccscensus_generate_bulk_report($formdata);
+    $result = report_ncccscensus_generate_bulk_report($formdata);
     if ($result === false) {
         echo $OUTPUT->box_start();
         $mform->display();
@@ -70,7 +70,7 @@ if ($formdata = $mform->get_data()) {
     $mform->display();
 }
 
-$reports = $DB->count_records('ncccscensus_batch');
+$reports = $DB->count_records('report_ncccscensus_batch');
 echo $OUTPUT->box_start();
 echo "<ul>";
 if ($reports) {

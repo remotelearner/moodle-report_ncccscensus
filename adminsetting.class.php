@@ -28,7 +28,7 @@ require_once($CFG->libdir.'/adminlib.php');
  *
  * @see admin_setting_configtext
  */
-class ncccscensusreport_admin_setting_upload extends admin_setting_configtext {
+class report_ncccscensus_admin_setting_upload extends admin_setting_configtext {
 
     /**
      * Constructor for this class.
