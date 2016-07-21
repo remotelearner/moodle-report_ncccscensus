@@ -35,7 +35,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
         require_once($CFG->dirroot.'/report/ncccscensus/lib.php');
         $this->resetAfterTest(true);
         $formdata = new stdClass;
-        $this->assertFalse(ncccscensus_get_courses($formdata));
+        $this->assertFalse(report_ncccscensus_get_courses($formdata));
     }
 
     /**
@@ -52,22 +52,22 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $formdata = new stdClass;
         $formdata->categories = $data['category1']->id;
         $courses = array($data['course1']->id);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Test subcategory selection.
         $formdata->categories = $data['category2']->id;
         $courses = array($data['course2']->id, $data['course6']->id);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Test subcategory selection with two courses in it.
         $formdata->categories = $data['category3']->id;
         $courses = array($data['course3']->id, $data['course4']->id, $data['course5']->id);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Test two category selections with three courses in it.
         $formdata->categories = join(',', array($data['category2']->id, $data['category3']->id));
         $courses = array($data['course2']->id, $data['course6']->id, $data['course3']->id, $data['course4']->id, $data['course5']->id);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
     }
 
     /**
@@ -83,15 +83,15 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $formdata = new stdClass;
         $courses = array($data['course1']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         $courses = array($data['course1']->id, $data['course2']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         $courses = array($data['course1']->id, $data['course2']->id, $data['course3']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Setting categories with courses selected should not change result.
         // Selected courses are assumed to be from selected categories.
@@ -99,15 +99,15 @@ class report_ncccscensus_testcase extends advanced_testcase {
 
         $courses = array($data['course1']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         $courses = array($data['course1']->id, $data['course2']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         $courses = array($data['course1']->id, $data['course2']->id, $data['course3']->id);
         $formdata->courses = join(',', $courses);
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
     }
 
     /**
@@ -124,17 +124,17 @@ class report_ncccscensus_testcase extends advanced_testcase {
         // Teacher with two courses.
         $courses = array($data['course1']->id, $data['course2']->id);
         $formdata->teachers = join(',', array($data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher with one course.
         $courses = array($data['course3']->id);
         $formdata->teachers = join(',', array($data['user2']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teachers selected.
         $courses = array($data['course1']->id, $data['course2']->id, $data['course3']->id);
         $formdata->teachers = join(',', array($data['user2']->id, $data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
     }
 
 
@@ -153,43 +153,43 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $courses = array($data['course1']->id);
         $formdata->teachers = join(',', array($data['user1']->id));
         $formdata->categories = $data['category1']->id;
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher with two courses and one exists in category 2.
         $courses = array($data['course2']->id);
         $formdata->teachers = join(',', array($data['user1']->id));
         $formdata->categories = $data['category2']->id;
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher with two courses and none exists in category.
         $courses = false;
         $formdata->teachers = join(',', array($data['user1']->id));
         $formdata->categories = $data['category4']->id;
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher and category 1.
         $courses = array($data['course3']->id);
         $formdata->teachers = join(',', array($data['user2']->id));
         $formdata->categories = $data['category3']->id;
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teachers selected and category 3.
         $courses = array($data['course3']->id);
         $formdata->categories = $data['category3']->id;
         $formdata->teachers = join(',', array($data['user2']->id, $data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teachers selected, category 1 and category 3.
         $courses = array($data['course1']->id, $data['course3']->id);
         $formdata->categories = join(',', array($data['category1']->id, $data['category3']->id));
         $formdata->teachers = join(',', array($data['user2']->id, $data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teachers selected and category 4.
         $courses = array($data['course1']->id, $data['course3']->id);
         $formdata->categories = join(',', array($data['category4']->id));
         $formdata->teachers = join(',', array($data['user2']->id, $data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), false);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), false);
 
     }
 
@@ -208,19 +208,19 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $courses = array($data['course1']->id);
         $formdata->courses = $data['course1']->id;
         $formdata->teachers = join(',', array($data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teacher with two courses and only show one.
         $courses = array($data['course1']->id);
         $formdata->courses = $data['course1']->id;
         $formdata->teachers = join(',', array($data['user1']->id, $data['user2']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher with two courses and show none as teacher is not enrolled.
         $courses = false;
         $formdata->courses = $data['course4']->id;
         $formdata->teachers = join(',', array($data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Setting categories with courses selected should not change result.
         // Selected courses are assumed to be from selected categories.
@@ -230,19 +230,19 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $courses = array($data['course1']->id);
         $formdata->courses = $data['course1']->id;
         $formdata->teachers = join(',', array($data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Two teacher with two courses and only show one.
         $courses = array($data['course1']->id);
         $formdata->courses = $data['course1']->id;
         $formdata->teachers = join(',', array($data['user1']->id, $data['user2']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
 
         // Teacher with two courses and show none as teacher is not enrolled.
         $courses = false;
         $formdata->courses = $data['course4']->id;
         $formdata->teachers = join(',', array($data['user1']->id));
-        $this->assertEquals(ncccscensus_get_courses($formdata), $courses);
+        $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
     }
 
     /**
