@@ -30,7 +30,7 @@ require_capability('report/ncccscensus:view', $context);
 
 $batchid = required_param('batchid', PARAM_INT);
 
-$record = $DB->get_record('ncccscensus_batch', array('id' => $batchid));
+$record = $DB->get_record('report_ncccscensus_batch', array('id' => $batchid));
 if ($record->status !== 0) {
     $fs = get_file_storage();
     // Check to see if file exists.

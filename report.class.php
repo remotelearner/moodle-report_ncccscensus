@@ -15,14 +15,14 @@
 /**
  * Generic report class.
  *
- * @package   blocks-censusreport
+ * @package   report_ncccscensus
  * @author    Justin Filip <jfilip@remote-learner.net>
  * @copyright 2009 Remote Learner - http://www.remote-learner.net/
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
-class report {
+class report_ncccscensus_report {
 
     /**
      * An array of strings for the top row of headers.

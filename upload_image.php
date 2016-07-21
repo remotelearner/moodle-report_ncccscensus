@@ -41,7 +41,7 @@ $PAGE->set_title($struploadimage);
 $PAGE->set_heading($SITE->fullname);
 $PAGE->navbar->add($struploadimage);
 
-$uploadform = new ncccscensusreport_upload_image_form();
+$uploadform = new report_ncccscensusreport_upload_image_form();
 
 if ($uploadform->is_cancelled()) {
     redirect($PAGE->url);
