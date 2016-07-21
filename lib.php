@@ -476,10 +476,12 @@ function report_ncccscensus_bulk_report_status($batchid) {
  */
 function report_ncccscensus_bulk_report_status_all() {
     global $DB;
-    $query = 'SELECT batchid, nb.zipfile, COUNT(*) totalcourses, SUM(nr.status = 0) totalwaiting,';
-    $query .= ' SUM(nr.status = 1) totalcomplete, nr.starttime';
-    $query .= ' FROM {report_ncccscensus_reports} nr, {report_ncccscensus_batch} nb WHERE nb.id = nr.batchid';
-    $query .= ' GROUP BY nr.batchid ORDER BY nr.starttime DESC LIMIT 200';
+    $query = 'SELECT nr.batchid, nb.zipfile, COUNT(1) AS totalcourses, SUM(nr.status = 0) AS totalwaiting,
+                 SUM(nr.status = 1) AS totalcomplete, nr.starttime
+                FROM {report_ncccscensus_reports} nr, {report_ncccscensus_batch} nb WHERE nb.id = nr.batchid
+            GROUP BY nr.batchid, nb.zipfile, nr.starttime
+            ORDER BY nr.starttime DESC
+               LIMIT 200';
     $all = $DB->get_records_sql($query);
     foreach ($all as $key => $value) {
         $all[$key]->starttime = userdate($all[$key]->starttime);
@@ -1068,7 +1070,7 @@ function report_ncccscensus_get_users($course, $group = null) {
     $context = context_course::instance($course);
     $users = array();
     foreach ($roles as $role) {
-        $roleusers = get_role_users($role, $context, false, 'u.id', null, true, $group);
+        $roleusers = get_role_users($role, $context, false, 'u.lastname, u.firstname, u.id', null, true, $group);
         foreach ($roleusers as $roleuser) {
             $users[] = $roleuser->id;
         }
