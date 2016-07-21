@@ -149,7 +149,7 @@ if ($ADMIN->fulltree) {
     $title = get_string($element, $reportname);
     $description = get_string($element.'desc', $reportname);
     $default = '';
-    $setting = new ncccscensusreport_admin_setting_upload($name, $title, $description, $default);
+    $setting = new report_ncccscensus_admin_setting_upload($name, $title, $description, $default);
     $settings->add($setting);
 
     // Currently selected header image.

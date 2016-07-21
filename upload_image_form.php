@@ -27,7 +27,7 @@ if (!defined('MOODLE_INTERNAL')) {
 
 require_once($CFG->libdir.'/formslib.php');
 
-class ncccscensusreport_upload_image_form extends moodleform {
+class report_ncccscensusreport_upload_image_form extends moodleform {
 
     /**
      * The full name of this report.
