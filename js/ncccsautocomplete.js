@@ -7,7 +7,7 @@ var Teachers = {
     },
     select : function (selected) {
         if (typeof selected.result.raw.id != "undefined") {
-            if (ncccs_contains(Teachers.teachers, selected.result.raw) == false) {
+            if (ncccs_contains(Teachers.teachers, selected.result.raw) === false) {
                 Teachers.teachers.push(selected.result.raw);
             }
         }
@@ -33,13 +33,13 @@ var Teachers = {
            ids = ids + seperator + Teachers.teachers[i]['id'];
            seperator = ',';
        }
-       if (html != "") {
+       if (html !== "") {
            html = '<b>Teachers selected</b><br>'+html;
        }
        ncccs_setcontent('#teachers_list', html);
        Y.one('input[name="teachers"]').set('value', ids);
     }
-}
+};
 
 // Categories autocomplete handler.
 var Categories = {
@@ -50,7 +50,7 @@ var Categories = {
     },
     select : function (selected) {
         if (typeof selected.result.raw.id != "undefined") {
-            if (ncccs_contains(Categories.categories, selected.result.raw) == false) {
+            if (ncccs_contains(Categories.categories, selected.result.raw) === false) {
                 Categories.categories.push(selected.result.raw);
             }
         }
@@ -76,13 +76,13 @@ var Categories = {
            ids = ids + seperator + Categories.categories[i]['id'];
            seperator = ',';
        }
-       if (html != "") {
+       if (html !== "") {
            html = '<b>Categories selected</b><br>'+html;
        }
        ncccs_setcontent('#categories_list', html);
        Y.one('input[name="categories"]').set('value', ids);
     }
-}
+};
 
 // Courses autocomplete handler.
 var Courses = {
@@ -93,7 +93,7 @@ var Courses = {
     },
     select : function (selected) {
         if (typeof selected.result.raw.id != "undefined") {
-            if (ncccs_contains(Courses.courses, selected.result.raw) == false) {
+            if (ncccs_contains(Courses.courses, selected.result.raw) === false) {
                 Courses.courses.push(selected.result.raw);
             }
         }
@@ -119,18 +119,18 @@ var Courses = {
            ids = ids + seperator + Courses.courses[i]['id'];
            seperator = ',';
        }
-       if (html != "") {
+       if (html !== "") {
            html = '<b>Courses selected</b><br>'+html;
        }
        ncccs_setcontent('#courses_list', html);
        Y.one('input[name="courses"]').set('value', ids);
     }
-}
+};
 
 // Setup autocomplete handlers.
 function init_ncccsautocomplete(Y) {
     // Not on auto complete page.
-    if (Y.one('#id_teacherids') != null) {
+    if (Y.one('#id_teacherids') !== null) {
         // Add query prameter for course categories.
         source = 'teachers.php?q={query}&callback={callback}&cc=';
         source = source + encodeURIComponent(JSON.stringify(Categories.categories));
@@ -151,7 +151,7 @@ function init_ncccsautocomplete(Y) {
         });
     }
 
-    if (Y.one('#id_categoryids') != null) {
+    if (Y.one('#id_categoryids') !== null) {
         Y.one('#id_categoryids').plug(Y.Plugin.AutoComplete, {
             resultFilters    : 'phraseMatch',
             resultHighlighter: 'phraseMatch',
@@ -163,7 +163,7 @@ function init_ncccsautocomplete(Y) {
         });
     }
 
-    if (Y.one('#id_coursesids') != null) {
+    if (Y.one('#id_coursesids') !== null) {
         source = 'courses.php?q={query}&callback={callback}&c=';
         source = source + encodeURIComponent(JSON.stringify(Categories.categories));
         Y.one('#id_coursesids').plug(Y.Plugin.AutoComplete, {
@@ -177,7 +177,7 @@ function init_ncccsautocomplete(Y) {
             }
         });
     }
-    if (Y.one('#id_resetbutton') != null) {
+    if (Y.one('#id_resetbutton') !== null) {
         Y.one('#id_resetbutton').on('click', function () { Categories.init(); Courses.init(); Teachers.init(); });
     }
 }
@@ -212,11 +212,11 @@ function ncccs_contains(a, obj) {
 // Set content and visibility.
 function ncccs_setcontent(id, html) {
     var div = Y.one(id);
-    if (div == null) {
+    if (div === null) {
         return;
     }
     div.setContent(html);
-    if (html != '') {
+    if (html !== '') {
        div.setStyle("display", "block");
     } else {
        div.setStyle("display", "none");
