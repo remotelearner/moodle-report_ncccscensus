@@ -30,13 +30,13 @@ require_login();
 $context = context_system::instance();
 require_capability('report/ncccscensus:view', $context);
 
-$query = required_param('q', PARAM_RAW);
+$query = required_param('q', PARAM_TEXT);
 
-$callback = required_param('callback', PARAM_RAW);
+$callback = required_param('callback', PARAM_TEXT);
 
-$courses = json_decode(required_param('c', PARAM_RAW), true);
+$courses = json_decode(required_param('c', PARAM_TEXT), true);
 
-$categories = json_decode(required_param('cc', PARAM_RAW), true);
+$categories = json_decode(required_param('cc', PARAM_TEXT), true);
 
 $results = report_ncccscensus_teacher_search($query, $courses, $categories);
 
