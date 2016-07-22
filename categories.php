@@ -31,8 +31,8 @@ require_login();
 $context = context_system::instance();
 require_capability('report/ncccscensus:view', $context);
 
-$query = required_param('q', PARAM_RAW);
-$callback = required_param('callback', PARAM_RAW);
+$query = required_param('q', PARAM_TEXT);
+$callback = required_param('callback', PARAM_TEXT);
 $results = report_ncccscensus_category_search($query);
 $json = json_encode($results);
 header('Content-Type: application/javascript');

@@ -173,11 +173,11 @@ class report_ncccscensus_setup_bulk_form extends moodleform {
         $mform =& $this->_form;
         $mform->addElement('header', 'header', get_string('querytitle', 'report_ncccscensus'));
         $mform->addElement('hidden', 'categories', '');
-        $mform->setType('categories', PARAM_RAW);
+        $mform->setType('categories', PARAM_TEXT);
         $mform->addElement('hidden', 'courses', '');
-        $mform->setType('courses', PARAM_RAW);
+        $mform->setType('courses', PARAM_TEXT);
         $mform->addElement('hidden', 'teachers', '');
-        $mform->setType('teachers', PARAM_RAW);
+        $mform->setType('teachers', PARAM_TEXT);
 
         $actions = preg_split('/,/', $this->actions);
         if (empty($actions[0])) {
@@ -508,7 +508,7 @@ function report_ncccscensus_get_category_courses($categories, $limittocourses = 
     if (count($categories) == 0) {
         return false;
     }
-    $categorycourses = Array();
+    $categorycourses = array();
     $tempcategory = $DB->get_in_or_equal($categories);
     $limittosql = "";
     if (is_array($limittocourses) && count($limittocourses) > 0) {
@@ -559,7 +559,7 @@ function report_ncccscensus_get_courses($formdata) {
         return false;
     }
 
-    $teachercourses = Array();
+    $teachercourses = array();
     if (!empty($formdata->teachers)) {
         // Load courses by teacher.
         $tempin = preg_split('/,/', $formdata->teachers);
@@ -584,7 +584,7 @@ function report_ncccscensus_get_courses($formdata) {
     if (!empty($formdata->courses) && count($teachercourses) > 0) {
         // If there is courses selected and teachers, only show the common courses.
         $tempcourses = preg_split('/,/', $formdata->courses);
-        $courses = Array();
+        $courses = array();
         foreach ($tempcourses as $course) {
             if (in_array($course, $teachercourses)) {
                 $courses[] = $course;

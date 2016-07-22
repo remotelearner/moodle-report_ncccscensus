@@ -38,7 +38,7 @@ $PAGE->set_heading($SITE->fullname);
 $PAGE->set_pagelayout('report');
 $PAGE->navbar->add(get_string('reportlink', 'report_ncccscensus'));
 
-$mode = optional_param('mode', '', PARAM_RAW);
+$mode = optional_param('mode', '', PARAM_TEXT);
 
 echo $OUTPUT->header();
 echo $OUTPUT->box_start();
