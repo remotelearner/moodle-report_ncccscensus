@@ -43,7 +43,7 @@ $jsmodule = array(
 );
 $PAGE->requires->js_init_call('init_ncccsautocomplete', null, false, $jsmodule);
 
-$actions = optional_param('actions', '', PARAM_RAW);
+$actions = optional_param('actions', '', PARAM_TEXT);
 $mform = new report_ncccscensus_setup_bulk_form($PAGE->url, $actions);
 
 if ($mform->is_cancelled()) {
