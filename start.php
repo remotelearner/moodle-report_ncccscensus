@@ -30,7 +30,7 @@ require_login();
 $context = context_system::instance();
 require_capability('report/ncccscensus:view', $context);
 
-$c = optional_param('c', '', PARAM_RAW);
+$c = optional_param('c', '', PARAM_TEXT);
 if (!empty($c)) {
     if (!get_config('report_ncccscensus', 'showhelpsplash')) {
         redirect(new moodle_url('/report/ncccscensus/bulk.php'));

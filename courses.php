@@ -31,9 +31,9 @@ require_login();
 $context = context_system::instance();
 require_capability('report/ncccscensus:view', $context);
 
-$query = required_param('q', PARAM_RAW);
-$callback = required_param('callback', PARAM_RAW);
-$categoryquery = json_decode(required_param('c', PARAM_RAW), true);
+$query = required_param('q', PARAM_TEXT);
+$callback = required_param('callback', PARAM_TEXT);
+$categoryquery = json_decode(required_param('c', PARAM_TEXT), true);
 
 $categorysql = "";
 $time = usertime(time(), get_user_timezone());
