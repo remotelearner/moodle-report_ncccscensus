@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -56,6 +58,12 @@ if ($ADMIN->fulltree) {
         'csv'  => get_string('csv', $reportname)
     );
 
+    // Common labels for two multi checkbox elements.
+    $duolabels = array(
+        'pdf'  => get_string('pdf', $reportname),
+        'csv'  => get_string('csv', $reportname)
+    );
+
     // Label arrays and default arrays for each of the multicheckbox elements.
     $multicheckboxes = array(
         'showcoursename'    => array('labels' => $multilabels, 'defaults' => array('html' => 1, 'pdf' => 1, 'csv' => 0)),
@@ -63,12 +71,8 @@ if ($ADMIN->fulltree) {
         'showcourseid'      => array('labels' => $multilabels, 'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0)),
         'showstudentid'     => array('labels' => $multilabels, 'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0)),
         'showteachername'   => array('labels' => $multilabels, 'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0)),
-        'showsignatureline' => array('labels' =>
-                                         array('pdf' => get_string('pdf', $reportname), 'csv' => get_string('csv', $reportname)),
-                                     'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0)),
-        'showdateline'      => array('labels' =>
-                                         array('pdf' => get_string('pdf', $reportname), 'csv' => get_string('csv', $reportname)),
-                                     'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0))
+        'showsignatureline' => array('labels' => $duolabels, 'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0)),
+        'showdateline'      => array('labels' => $duolabels, 'defaults' => array('html' => 0, 'pdf' => 0, 'csv' => 0))
     );
 
     // Display course name setting.

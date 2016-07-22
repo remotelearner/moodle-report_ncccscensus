@@ -14,13 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * NCCCS Census report tests
  *
  * @package   report_ncccscensus
  * @category  test
+ * @copyright 2014 Remote-Learner Inc.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * NCCCS Census report tests
+ *
  * @copyright 2014 Remote-Learner Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -66,7 +73,13 @@ class report_ncccscensus_testcase extends advanced_testcase {
 
         // Test two category selections with three courses in it.
         $formdata->categories = join(',', array($data['category2']->id, $data['category3']->id));
-        $courses = array($data['course2']->id, $data['course6']->id, $data['course3']->id, $data['course4']->id, $data['course5']->id);
+        $courses = array(
+                $data['course2']->id,
+                $data['course6']->id,
+                $data['course3']->id,
+                $data['course4']->id,
+                $data['course5']->id
+        );
         $this->assertEquals(report_ncccscensus_get_courses($formdata), $courses);
     }
 
@@ -463,7 +476,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $this->assertEquals($data['user1']->id, $results[0]['id']);
         $this->assertEquals($data['user2']->id, $results[1]['id']);
 
-        // Test: select category where a user with capability exists
+        // Test: select category where a user with capability exists.
         $categories = array(array('id' => $data['category1']->id));
         $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
         $this->assertEquals(2, count($results));
@@ -472,7 +485,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
         $this->assertEquals($data['user1']->id, $results[0]['id']);
         $this->assertEquals($data['user2']->id, $results[1]['id']);
 
-        // Test: select all categories where user with capability exists
+        // Test: select all categories where user with capability exists.
         $categories = array(array('id' => $data['category1']->id), array('id' => $data['category2']->id));
         $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
         $this->assertEquals(2, count($results));
@@ -495,7 +508,7 @@ class report_ncccscensus_testcase extends advanced_testcase {
         role_change_permission($roleid, $coursecontext2, 'moodle/grade:edit', CAP_ALLOW);
         $this->getDataGenerator()->enrol_user($data['user2']->id, $data['course2']->id, $roleid);
 
-        // Test: select category where a user with capability exists, this should return two results
+        // Test: select category where a user with capability exists, this should return two results.
         $categories = array(array('id' => $data['category1']->id));
         $results = report_ncccscensus_teacher_search('teacher', array(), $categories);
         $this->assertEquals(2, count($results));

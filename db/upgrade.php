@@ -22,6 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright  (C) 2014 Remote Learner.net Inc http://www.remote-learner.net
  */
+
+/**
+ * Upgrade function
+ *
+ * @global object $DB
+ * @param int $oldversion The version we're upgrading from.
+ */
 function xmldb_report_ncccscensus_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
