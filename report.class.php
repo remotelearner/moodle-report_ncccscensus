@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -21,7 +23,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
+/**
+ * Generic report class.
+ *
+ * @copyright 2009 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class report_ncccscensus_report {
 
     /**
@@ -262,6 +269,7 @@ class report_ncccscensus_report {
     /**
      * The function which creates and initiates the download of the PDF file.
      *
+     * @param string $saveas The filename to save to.
      * @return an empty string if no data is found
      */
     public function download($saveas = false) {
@@ -465,7 +473,7 @@ class report_ncccscensus_report {
             }
 
             $fieldarray = $fielddata['data'];
-            $reporthtml .= '<tr bgcolor="#'.($i%2==0 ? 'dddddd' : 'ffffff').'">';
+            $reporthtml .= '<tr bgcolor="#'.((($i % 2) == 0) ? 'dddddd' : 'ffffff').'">';
             $nogradeflag = false;
             foreach ($fieldarray as $fieldname => $fieldvalue) {
                 $reporthtml .= '<td'.($studentcolspan2 ? ' colspan=2' : '').' ';
@@ -484,8 +492,9 @@ class report_ncccscensus_report {
                 if (isset($colborders[$fieldname])) {
                     $reporthtml .= $colborders[$fieldname];
                 }
-                $reporthtml .= (($i >= $this->maxrowsperpage || $numrows == $i + 1)
-                        ? ('border-bottom:'.$this->reportborder.';') : '');
+                if (($i >= $this->maxrowsperpage) || ($numrows == $i + 1)) {
+                    $reporthtml .= 'border-bottom:'.$this->reportborder.';';
+                }
                 if (($fieldname == 'submissionstatus' || $fieldname == 'gradegrade') && $nogradeflag) {
                     $reporthtml .= 'font-weight:bold;';
                 }
@@ -580,7 +589,7 @@ class report_ncccscensus_report {
             $shrinkratio = $maxlength / $stringlength;
             $stringchars = strlen($string);
             $maxchars = floor($stringchars * $shrinkratio);
-            $string = substr($string, 0, $maxchars-3).'...';
+            $string = substr($string, 0, $maxchars - 3).'...';
         }
         return $string;
     }

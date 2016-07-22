@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -12,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Census report pdf class, extends the fast pdf class.
+ *
+ * @package   report_ncccscensus
+ * @author    Tyler Bannister <tyler.banniser@remote-learner.net>
+ * @copyright 2011 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 require_once($CFG->libdir.'/tcpdf/tcpdf.php');
 
 /**
@@ -109,6 +119,8 @@ class CR2_PDF extends TCPDF {
 
     /**
      * This function creates the HTML markup of the footer and prints the legend.
+     *
+     * @param int $footermargin The size of the footer margin
      */
     public function outputfooter($footermargin) {
 
@@ -148,6 +160,5 @@ class CR2_PDF extends TCPDF {
         $legendhtml .= '</tr>';
         $legendhtml .= '</table>';
         $this->writeHTML($legendhtml, true, false, true, false, '');
-
     }
 }

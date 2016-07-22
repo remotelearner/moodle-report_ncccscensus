@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -27,6 +29,12 @@ if (!defined('MOODLE_INTERNAL')) {
 
 require_once($CFG->libdir.'/formslib.php');
 
+/**
+ * Handles uploading files
+ *
+ * @copyright 2014 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class report_ncccscensusreport_upload_image_form extends moodleform {
 
     /**
@@ -69,6 +77,8 @@ class report_ncccscensusreport_upload_image_form extends moodleform {
      * File type validation for selected image files.
      * Overriding dummy stub method.
      *
+     * @param array $data array of ("fieldname"=>value) of submitted data
+     * @param array $files array of uploaded files "element_name"=>tmp_file_path
      * @see moodleform::definition()
      */
     public function validation($data, $files) {

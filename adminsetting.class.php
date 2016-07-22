@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -27,12 +29,18 @@ require_once($CFG->libdir.'/adminlib.php');
  * Class extends admin setting class to allow/process an uploaded file
  *
  * @see admin_setting_configtext
+ * @copyright 2014 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class report_ncccscensus_admin_setting_upload extends admin_setting_configtext {
 
     /**
      * Constructor for this class.
      *
+     * @param string $name unique ascii name 
+     * @param string $visiblename localised
+     * @param string $description long localised info
+     * @param string $defaultsetting
      * @see admin_setting_configtext::__construct()
      */
     public function __construct($name, $visiblename, $description, $defaultsetting) {
@@ -42,6 +50,8 @@ class report_ncccscensus_admin_setting_upload extends admin_setting_configtext {
     /**
      * Overrides the parent class's method.
      *
+     * @param string $data We don't use the data param.
+     * @param string $query The query to use
      * @return string An XHTML string for the upload setting
      * @see admin_setting_configtext::output_html()
      */

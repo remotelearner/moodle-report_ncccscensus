@@ -1,4 +1,6 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -46,6 +48,8 @@ define('REPORT_NCCCSCENSUS_EXCLUDE_GROUP_MEMBERS', 0);
 /**
  * Class to define the report search form
  *
+ * @copyright 2014 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @see moodleform
  */
 class report_ncccscensus_setup_query_form extends moodleform {
@@ -143,16 +147,19 @@ class report_ncccscensus_setup_query_form extends moodleform {
 /**
  * Class to define the bulk report search form
  *
+ * @copyright 2014 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @see moodleform
  */
 class report_ncccscensus_setup_bulk_form extends moodleform {
     /** @var string Comma seperate list of sections to show categories,courses,teachers */
     private $actions = null;
+
     /**
      * Constructor to setup form.
      *
-     * @param $pageurl Page url for form.
-     * @param $actions Actions to show on form.
+     * @param mixed $pageurl Page url for form.
+     * @param mixed $actions Actions to show on form.
      */
     public function __construct($pageurl, $actions) {
         $this->actions = $actions;
@@ -161,7 +168,6 @@ class report_ncccscensus_setup_bulk_form extends moodleform {
 
     /**
      * Method that defines all of the elements of the form.
-     *
      */
     public function definition() {
         $mform =& $this->_form;
@@ -227,6 +233,7 @@ function report_ncccscensus_cron() {
 /**
  * Generates the bulk report pdf's and zip.
  *
+ * @param int $batch The id of the batch.
  * @return void
  * @uses $CFG, $DB
  */
@@ -470,7 +477,6 @@ function report_ncccscensus_bulk_report_status($batchid) {
 /**
  * Retrieves a all bulk report status.
  *
- * @param string $batchid The batchid for the bulk report
  * @return array with bulk report status
  * @uses $DB
  */
@@ -493,6 +499,7 @@ function report_ncccscensus_bulk_report_status_all() {
  * Locates courses in categories.
  *
  * @param array $categories List of ids of categories.
+ * @param bool $limittocourses Whether to limit to courses
  * @return bool|array False on failure, Array of courses on success
  * @uses $DB
  */
@@ -1541,13 +1548,13 @@ function report_ncccscensus_teacher_search($query, $courses = array(), $courseca
             }
         }
 
-    } elseif ((empty($coursecategories) && !empty($courses)) || (!empty($coursecategories) && !empty($courses))) {
+    } else if ((empty($coursecategories) && !empty($courses)) || (!empty($coursecategories) && !empty($courses))) {
         // Search of users within a course.
 
         $courses = array_map('report_ncccscensus_format_category_data', $courses);
         $results = report_ncccscensus_get_users_with_capability_in_contexts($courses, 'moodle/grade:edit', $query);
 
-    } elseif (!empty($coursecategories) && empty($courses)) {
+    } else if (!empty($coursecategories) && empty($courses)) {
         // Search for courses within a category and for users within those courses.
 
         // Format coursecategories so that it's only an array of course category ids.
@@ -1582,7 +1589,7 @@ function report_ncccscensus_get_users_with_capability_in_contexts($courseids, $c
         return $results;
     }
 
-    foreach($courseids as $courseid) {
+    foreach ($courseids as $courseid) {
         if (empty($courseid)) {
             continue;
         }
@@ -1714,6 +1721,8 @@ function report_ncccscensus_category_search($query) {
 /**
  * Class: report_ncccscensus_exception
  *
+ * @copyright 2014 Remote Learner - http://www.remote-learner.net/
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @see moodle_exception
  */
 class report_ncccscensus_exception extends moodle_exception {
