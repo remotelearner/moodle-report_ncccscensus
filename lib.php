@@ -1077,7 +1077,7 @@ function report_ncccscensus_get_users($course, $group = null) {
     $context = context_course::instance($course);
     $users = array();
     foreach ($roles as $role) {
-        $roleusers = get_role_users($role, $context, false, 'u.lastname, u.firstname, u.id', null, true, $group);
+        $roleusers = get_role_users($role, $context, false, 'u.id, u.lastname, u.firstname', null, true, $group);
         foreach ($roleusers as $roleuser) {
             $users[] = $roleuser->id;
         }
