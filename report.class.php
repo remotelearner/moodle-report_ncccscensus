@@ -244,7 +244,7 @@ class report_ncccscensus_report {
         $this->dateline      = false;
         $this->footnote = get_string('studentfootnote', 'report_ncccscensus');
         $this->fontname = 'helvetica';
-        $this->maxrowsperpage = 22;
+        $this->maxrowsperpage = 21;
         $this->imagewidth = 5;
         $this->certifyfontsize = 10;
         $this->reportpaddingpixels = 2;
