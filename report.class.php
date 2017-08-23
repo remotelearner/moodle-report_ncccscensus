@@ -244,7 +244,7 @@ class report_ncccscensus_report {
         $this->dateline      = false;
         $this->footnote = get_string('studentfootnote', 'report_ncccscensus');
         $this->fontname = 'helvetica';
-        $this->maxrowsperpage = 19;
+        $this->maxrowsperpage = 20;
         $this->imagewidth = 5;
         $this->certifyfontsize = 10;
         $this->reportpaddingpixels = 2;
@@ -454,11 +454,14 @@ class report_ncccscensus_report {
             $this->maxrowsperpage -= 1;
         }
 
+        $rowheight = 32;
+        $tablemaxheight = 640;
+
         // Build the report data rows.
         foreach ($this->data as $i => $fielddata) {
 
             // Manually create new page if need be.
-            if ($rownum > $this->maxrowsperpage) {
+            if ($rownum * $rowheight >= $tablemaxheight) {
                 $reporthtml .= '</table>';
                 $this->pdf->SetX($this->leftmargin, true);
                 $this->pdf->writeHTML($reporthtml, false, false, true);
