@@ -366,7 +366,7 @@ class report_ncccscensus_report {
                 // Handle the grade columns.
                 if ($id == 'grade' && $bid == 'grade') {
                     $stringwidth = $this->pdf->GetStringWidth(get_string('nograde', 'report_ncccscensus'));
-                    $stringwidth += 0.1;
+                    $stringwidth += 1;
                     $coltotalwidth += $stringwidth;
                     $colwidth = 'width:'.$stringwidth.'in;';
                     $colborders[$id.$bid] = 'border-left:'.$this->reportborder.';';
