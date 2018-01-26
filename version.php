@@ -27,10 +27,10 @@ if (!defined('MOODLE_INTERNAL')) {
     die();
 }
 
-$plugin->version  = 2017052401;
-$plugin->release  = '3.2.0.1';
+$plugin->version  = 2017111300;
+$plugin->release  = '3.4.0.0';
 
 $plugin->component = 'report_ncccscensus';
 $plugin->cron = 5;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->requires = 2016120500;
+$plugin->requires = 2017111300;
