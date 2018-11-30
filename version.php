@@ -28,7 +28,7 @@ if (!defined('MOODLE_INTERNAL')) {
 }
 
 $plugin->version  = 2017052401;
-$plugin->release  = '3.2.0.1';
+$plugin->release  = '11.0.0.0';
 
 $plugin->component = 'report_ncccscensus';
 $plugin->cron = 5;
